@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AstroDash Mini Curso</title>
+<link rel="icon" href="img/icon.svg">
+<style>
+:root {
+  --bg: #0b0a16;
+  --stage: #12101f;
+  --panel: #1b1830;
+  --panel-2: #241f3d;
+  --line: #2f2a4d;
+  --text: #ece9f7;
+  --muted: #a9a3c4;
+  --accent: #ff8a3d;
+  --accent-2: #478cbf;
+  --good: #6fd08c;
+  --warn: #ffcc4d;
+  --code-bg: #0f0e1a;
+  --font: "Inter", "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "JetBrainsMono Nerd Font", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+#viewport { position: fixed; inset: 0; }
+#stage { width: 1600px; height: 900px; position: absolute; left: 50%; top: 50%; transform-origin: center center; }
+.slide {
+  position: absolute; inset: 0; display: none; flex-direction: column;
+  padding: 56px 72px 64px; background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(71,140,191,.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255,138,61,.10), transparent 60%),
+    var(--stage);
+  border-radius: 6px; overflow: hidden;
+}
+.slide.active { display: flex; }
+.slide::after { /* estrelinhas */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff8, transparent),
+    radial-gradient(1px 1px at 72% 12%, #fff6, transparent),
+    radial-gradient(1.5px 1.5px at 90% 70%, #fff5, transparent),
+    radial-gradient(1px 1px at 35% 85%, #fff6, transparent),
+    radial-gradient(1px 1px at 55% 40%, #fff3, transparent);
+}
+header { margin-bottom: 26px; position: relative; z-index: 1; }
+header h2 { font-size: 46px; margin: 8px 0 0; letter-spacing: -.5px; line-height: 1.1; }
+.crumb { color: var(--muted); font-size: 18px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+.chip { margin-left: 14px; background: var(--accent); color: #1a1209; font-weight: 700; font-size: 16px; padding: 3px 12px; border-radius: 999px; vertical-align: 2px; }
+.body { flex: 1; display: grid; gap: 40px; min-height: 0; position: relative; z-index: 1; }
+.body.full { grid-template-columns: 1fr; }
+.body.split { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr); }
+.body.wide-img { grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.5fr); }
+.text { font-size: 24px; line-height: 1.5; min-height: 0; overflow: hidden; }
+.text p { margin: 0 0 14px; }
+.text ul, .text ol { margin: 0 0 18px; padding-left: 30px; }
+.text li { margin-bottom: 8px; }
+.text li::marker { color: var(--accent); font-weight: 700; }
+.legend { font-size: 19px; color: var(--muted); }
+.legend ol { padding-left: 26px; }
+.legend li::marker { content: counter(list-item) "  "; }
+code { font-family: var(--mono); background: var(--panel-2); padding: 1px 7px; border-radius: 5px; font-size: .88em; color: #ffd3b4; }
+code.path { color: #9fd0ff; }
+kbd { font-family: var(--mono); font-size: .8em; background: #2b2648; border: 1px solid #4a4370; border-bottom-width: 3px; border-radius: 6px; padding: 1px 8px; }
+b { color: #fff; }
+.callout { border-left: 5px solid var(--accent-2); background: rgba(71,140,191,.12); padding: 12px 18px; border-radius: 0 10px 10px 0; font-size: 20px; line-height: 1.45; margin: 12px 0; }
+.callout b:first-child { display: inline-block; margin-right: 6px; color: #9fd0ff; text-transform: uppercase; font-size: 15px; letter-spacing: 1px; }
+.callout.warn { border-color: var(--warn); background: rgba(255,204,77,.10); }
+.callout.warn b:first-child { color: var(--warn); }
+.callout.why { border-color: var(--accent); background: rgba(255,138,61,.10); }
+.callout.why b:first-child { color: var(--accent); }
+.callout.native { border-color: var(--good); background: rgba(111,208,140,.10); }
+.callout.native b:first-child { color: var(--good); }
+table { border-collapse: collapse; width: 100%; font-size: 20px; margin: 6px 0 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+.media { display: flex; gap: 18px; min-height: 0; align-items: flex-start; justify-content: center; }
+.media.n2 { flex-direction: column; align-items: center; }
+.media figure { margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 0; max-height: 100%; }
+.media.n2 figure { max-height: 49%; }
+.media img { max-width: 100%; max-height: 700px; width: auto; object-fit: contain; border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(0,0,0,.45); background: #000; cursor: zoom-in; }
+.media.n2 img { max-height: 330px; }
+.media figure.tall img { max-height: 690px; }
+.media.n2.row { flex-direction: row; align-items: flex-start; }
+.media.n2.row figure { max-height: 100%; flex: 0 1 auto; }
+.media.n2.row img { max-height: 690px; }
+.media.n2.row figure { min-width: 0; }
+.slide:not(.tallrow) .media.n2.row figure:not(.tall) img { max-height: 520px; }
+figcaption { color: var(--muted); font-size: 17px; margin-top: 8px; text-align: center; }
+/* título */
+.title-wrap, .section-wrap { margin: auto 0; position: relative; z-index: 1; }
+.title .title-wrap, .end .title-wrap { text-align: center; margin: auto; }
+.logo-ship { width: 132px; height: 132px; margin: 0 auto 26px; animation: float 4s ease-in-out infinite; }
+.logo-ship img { width: 100%; image-rendering: pixelated; filter: drop-shadow(0 10px 30px rgba(71,140,191,.5)); }
+@keyframes float { 50% { transform: translateY(-12px) rotate(-4deg); } }
+.kicker { color: var(--accent); font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 22px; margin: 0; }
+h1 { font-size: 110px; margin: 6px 0 10px; letter-spacing: -3px; line-height: 1; }
+.section h1 { font-size: 66px; letter-spacing: -1.5px; max-width: 1200px; }
+.sub { font-size: 30px; color: var(--muted); margin: 0 0 22px; }
+.meta { font-size: 22px; color: var(--muted); }
+.hint { margin-top: 50px; font-size: 18px; color: #7d77a0; }
+.steps { list-style: none; padding: 0; margin: 40px 0 0; display: flex; flex-wrap: wrap; gap: 14px; }
+.steps li { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 20px; font-size: 24px; display: flex; gap: 12px; align-items: center; }
+.steps span { background: var(--accent); color: #1a1209; font-weight: 800; border-radius: 50%; width: 34px; height: 34px; display: grid; place-items: center; font-size: 18px; }
+/* arquitetura */
+.arch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 16px; }
+.box { background: var(--panel); border: 1px solid var(--line); border-top: 5px solid var(--accent-2); border-radius: 12px; padding: 14px 20px; }
+.box h4 { margin: 0 0 6px; font-size: 24px; }
+.box p { margin: 0; font-size: 19px; line-height: 1.4; color: var(--muted); }
+.box.mgr { border-top-color: var(--accent); } .box.comp { border-top-color: var(--good); } .box.sys { border-top-color: var(--warn); }
+.box.ui { border-top-color: #c07cff; } .box.lvl { border-top-color: #ff6b8a; }
+/* código */
+.code-wrap { flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; z-index: 1; }
+.note { font-size: 21px; line-height: 1.45; color: var(--muted); }
+.note b { color: var(--text); }
+.codebox { flex: 1; min-height: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.codebar { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 8px 18px; background: #16142a; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 16px; color: #9fd0ff; }
+.copy { font: 600 15px var(--font); background: var(--accent); color: #1a1209; border: 0; border-radius: 8px; padding: 7px 16px; cursor: pointer; }
+.copy.ok { background: var(--good); }
+pre { margin: 0; padding: 14px 20px; overflow: auto; flex: 1; tab-size: 4; -moz-tab-size: 4; }
+pre code { background: none; padding: 0; color: #e6e1ff; font-size: inherit; }
+pre { line-height: 1.42; overflow: hidden; white-space: pre; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; }
+.cols pre + pre { border-left: 1px solid var(--line); }
+.k { color: #ff7ab2; } .t { color: #7dd3fc; } .s { color: #a5e07c; } .c { color: #7d77a0; font-style: italic; }
+.a { color: #ffb86c; } .n { color: #6fd08c; } .d { color: #f7c66b; } .f { color: #8fb8ff; }
+/* UI fixa */
+#bar { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width .25s; z-index: 5; }
+#counter { position: fixed; right: 16px; bottom: 12px; color: #6f6990; font: 14px var(--mono); z-index: 5; }
+#nav { position: fixed; right: 16px; bottom: 36px; display: flex; gap: 6px; z-index: 5; opacity: .35; transition: opacity .2s; }
+#nav:hover { opacity: 1; }
+#nav button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; width: 40px; height: 34px; font-size: 18px; cursor: pointer; }
+#menu { position: fixed; top: 0; left: 0; bottom: 0; width: min(420px, 90vw); background: #120f22f2; border-right: 1px solid var(--line); z-index: 10; overflow: auto; transform: translateX(-100%); transition: transform .2s; padding: 18px 0; }
+#menu.open { transform: none; }
+#menu a { display: block; padding: 7px 22px; color: var(--muted); text-decoration: none; font-size: 15px; }
+#menu a:hover, #menu a.cur { color: var(--text); background: var(--panel); }
+#menu a small { color: var(--accent); margin-right: 8px; font-family: var(--mono); }
+#zoom { position: fixed; inset: 0; background: #000d; display: none; place-items: center; z-index: 20; cursor: zoom-out; }
+#zoom.open { display: grid; }
+#zoom img { max-width: 96vw; max-height: 96vh; border-radius: 8px; }
+@media print {
+  @page { size: 1600px 900px; margin: 0; }
+  html, body { overflow: visible; height: auto; background: var(--stage); }
+  #viewport { position: static; display: block; }
+  #stage { transform: none !important; width: 1600px; height: auto; }
+  .slide { display: flex !important; position: relative; height: 900px; page-break-after: always; break-after: page; border-radius: 0; }
+  #bar, #counter, #nav, #menu, .copy { display: none !important; }
+  pre { overflow: hidden; }
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+<section class="slide title " data-title="title"><div class="title-wrap"><div class="logo-ship"><img src="img/icon.svg" alt=""></div><p class="kicker">Mini curso de Godot 4</p><h1>AstroDash</h1><p class="sub">Do zero ao jogo de sobrevivência no espaço, em 2 aulas</p><p class="meta">Godot 4.7 · GDScript · 2 × 1h20</p><p class="hint">Use ← → ou clique para navegar · <kbd>M</kbd> índice · <kbd>F</kbd> tela cheia</p></div></section>
+<section class="slide content " data-title="O que vamos construir"><header><span class="crumb">Introdução</span><h2>O que vamos construir</h2></header><div class="body wide-img"><div class="text"><ul><li>Um jogo de <b>sobrevivência</b> no espaço: asteroides vêm de <b>todas as direções</b>.</li><li>A nave desvia; o objetivo é <b>sobreviver o máximo de tempo</b>.</li><li>Menu inicial, HUD com tempo e recorde, tela de Game Over e dificuldade que aumenta com o tempo.</li><li>Arte provisória: o <b>ícone do Godot</b>. Na 2ª parte do curso a gente desenha tudo no <b>LibreSprite</b> e troca.</li></ul></div><div class="media n1"><figure class=""><img src="img/run_game.png" style="" alt="O jogo pronto (com a arte provisória)"><figcaption>O jogo pronto (com a arte provisória)</figcaption></figure></div></div></section>
+<section class="slide content " data-title="Plano das aulas"><header><span class="crumb">Introdução</span><h2>Plano das aulas</h2></header><div class="body full"><div class="text"><table><thead><tr><th></th><th>Aula 1 (1h20)</th><th>Aula 2 (1h20)</th></tr></thead><tbody><tr><td>1</td><td>Apresentação do Godot e configurações do projeto</td><td>GameManager (Autoload) e HUD</td></tr><tr><td>2</td><td>A nave: cena, movimento e colisão</td><td>Componentes: vida e área de dano</td></tr><tr><td>3</td><td>A fase: paredes e cena principal</td><td>Game Over e reiniciar</td></tr><tr><td>4</td><td>O asteroide: corpo físico e sinais</td><td>Menu inicial</td></tr><tr><td>5</td><td>O spawner: asteroides vindo de todo lado</td><td>Dificuldade, fundo animado e preparação da arte</td></tr></tbody></table><div class="callout tip"><b>Dica</b> Se alguém se perder na Aula 1, o projeto <b>checkpoint-aula1</b> no repositório começa a Aula 2 do ponto certo.</div></div></div></section>
+<section class="slide content arch" data-title="Como o projeto é organizado"><header><span class="crumb">Introdução</span><h2>Como o projeto é organizado</h2></header><div class="body full"><div class="text"><div class="arch-grid"><div class="box mgr"><h4>Managers</h4><p><b>GameManager</b> (Autoload): tempo, recorde, troca de cena e o aviso de game over.</p></div><div class="box comp"><h4>Componentes</h4><p><b>HealthComponent</b> e <b>HurtboxComponent</b>: peças reutilizáveis que você encaixa em qualquer cena.</p></div><div class="box ent"><h4>Entidades</h4><p><b>Player</b> e <b>Asteroid</b>: cada uma é uma cena independente.</p></div><div class="box sys"><h4>Sistemas</h4><p><b>AsteroidSpawner</b>: cria os asteroides e controla a dificuldade.</p></div><div class="box ui"><h4>Interface</h4><p><b>HUD</b>, <b>GameOver</b> e <b>MainMenu</b>: só ouvem os sinais do GameManager.</p></div><div class="box lvl"><h4>Fases</h4><p><b>Game</b> junta tudo: fundo, paredes, spawner, player e UI.</p></div></div><div class="callout why"><b>Por quê?</b> Cada peça faz <b>uma coisa só</b> e conversa por <b>sinais</b>. Assim dá para adicionar inimigos, power-ups ou novas fases sem quebrar o resto.</div></div></div></section>
+<section class="slide section " data-title="Aula 1"><div class="section-wrap"><p class="kicker">Aula 1</p><h1>Nave, asteroides e o primeiro jogo rodando</h1><ol class="steps"><li><span>1</span>Conhecer o editor</li><li><span>2</span>Configurar o projeto</li><li><span>3</span>Player</li><li><span>4</span>Cena Game e paredes</li><li><span>5</span>Asteroide</li><li><span>6</span>Spawner</li></ol></div></section>
+<section class="slide content " data-title="Criando o projeto"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.1</span><h2>Criando o projeto</h2></header><div class="body wide-img"><div class="text"><ol><li>Abra o Godot 4 → <b>Criar</b> (Gerenciador de Projetos).</li><li>Nome: <b>AstroDash</b>. Escolha uma pasta vazia.</li><li>Renderizador: <b>Forward+</b> (o padrão serve).</li><li>Clique em <b>Criar e Editar</b>.</li></ol><div class="callout tip"><b>Dica</b> Tudo dentro do projeto é acessado pelo caminho <code>res://</code> (a pasta do projeto).</div><div class="legend"><ol><li><b>Cena</b>: a árvore de nós da cena aberta</li><li><b>Arquivos</b>: pastas e arquivos (<code>res://</code>)</li><li><b>Viewport</b>: onde você vê e arrasta as coisas</li><li><b>Inspetor</b>: propriedades do nó selecionado (também tem <b>Sinais</b> e <b>Grupos</b>)</li><li>Telas: <b>2D</b>, <b>3D</b>, <b>Script</b>...</li><li>Rodar o jogo: <kbd>F5</kbd> projeto, <kbd>F6</kbd> cena atual</li></ol></div></div><div class="media n1"><figure class=""><img src="img/e01_editor_vazio_anotado.png" style="" alt="Criando o projeto"></figure></div></div></section>
+<section class="slide content " data-title="Nós e cenas em 1 minuto"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.2</span><h2>Nós e cenas em 1 minuto</h2></header><div class="body full"><div class="text"><ul><li>Tudo no Godot é um <b>nó</b> (Node). Cada tipo de nó faz uma coisa: desenhar uma imagem, colidir, tocar som, contar tempo...</li><li>Uma <b>cena</b> é uma árvore de nós salva em um arquivo <code>.tscn</code>.</li><li>Cenas podem ser <b>instanciadas</b> dentro de outras: a cena Game vai conter a cena Player, que por sua vez contém componentes.</li><li><b>Sinais</b> são avisos que um nó emite ("o timer acabou", "o botão foi apertado"). Outros nós se conectam a eles.</li><li>Regra de ouro do curso: <b>se dá para fazer no editor, faz no editor</b>. Código só para lógica.</li></ul></div></div></section>
+<section class="slide content " data-title="Configurações: tamanho da tela"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.3</span><h2>Configurações: tamanho da tela</h2></header><div class="body wide-img"><div class="text"><ol><li><b>Projeto → Configurações do Projeto</b> → aba <b>Geral</b>.</li><li>Ligue <b>Configurações Avançadas</b> (canto superior direito).</li><li>Busque <code>size</code> → <b>Exibição → Janela</b>:</li><li><b>Largura do Viewport</b> = 640, <b>Altura do Viewport</b> = 360</li><li><b>Substituir Largura da Janela</b> = 1280, <b>Altura</b> = 720</li></ol><div class="callout why"><b>Por quê?</b> O jogo é desenhado em 640×360 (ótimo para pixel art) e a janela abre em 1280×720 (2× maior).</div></div><div class="media n1"><figure class=""><img src="img/a01_ps_window_size.png" style="" alt="Configurações: tamanho da tela"></figure></div></div></section>
+<section class="slide content " data-title="Configurações: esticar e pixel art"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.4</span><h2>Configurações: esticar e pixel art</h2></header><div class="body wide-img"><div class="text"><ol><li>Busque <code>stretch</code> → <b>Exibição → Janela → Esticar</b>:</li><li><b>Modo</b> = <code>canvas_items</code>, <b>Aspecto</b> = <code>keep</code>, <b>Modo de Escalonamento</b> = <code>integer</code></li><li>Busque <code>texture_filter</code> → <b>Filtro de Textura Padrão</b> = <code>Nearest</code></li><li>Busque <code>clear_color</code> → <b>Cor de Fundo Padrão</b>: um azul bem escuro (ex.: <code>#0a0819</code>)</li></ol><div class="callout why"><b>Por quê?</b> <b>Nearest</b> deixa o pixel art nítido (sem borrar) quando a imagem é ampliada.</div></div><div class="media n2"><figure class=""><img src="img/a03_ps_stretch.png" style="" alt="Configurações: esticar e pixel art"></figure><figure class=""><img src="img/a04_ps_texture_filter.png" style="" alt="Configurações: esticar e pixel art"></figure></div></div></section>
+<section class="slide content " data-title="Configurações: nomes das camadas de física"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.5</span><h2>Configurações: nomes das camadas de física</h2></header><div class="body wide-img"><div class="text"><ol><li>Busque <code>2d_physics</code> → <b>Nomes de Camadas → Física 2D</b>.</li><li>Layer 1 = <code>player</code>, Layer 2 = <code>asteroides</code>, Layer 3 = <code>paredes</code></li></ol><table><thead><tr><th>Objeto</th><th>Está na camada (Layer)</th><th>Enxerga (Mask)</th></tr></thead><tbody><tr><td>Player (corpo)</td><td>player</td><td>paredes</td></tr><tr><td>Hurtbox do Player</td><td>nenhuma</td><td>asteroides</td></tr><tr><td>Asteroide</td><td>asteroides</td><td>nenhuma</td></tr><tr><td>Paredes</td><td>paredes</td><td>nenhuma</td></tr></tbody></table><div class="callout why"><b>Por quê?</b> <b>Layer</b> = onde eu estou. <b>Mask</b> = o que eu detecto. Asteroides atravessam tudo, mas a Hurtbox do player sente quando um encosta.</div></div><div class="media n1"><figure class=""><img src="img/a06_ps_layer_names.png" style="" alt="Configurações: nomes das camadas de física"></figure></div></div></section>
+<section class="slide content " data-title="Configurações: Mapa de Entrada"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.6</span><h2>Configurações: Mapa de Entrada</h2></header><div class="body wide-img"><div class="text"><ol><li>Aba <b>Mapa de Entrada</b>.</li><li>Em <b>Adicionar Nova Ação</b> crie: <code>move_left</code>, <code>move_right</code>, <code>move_up</code>, <code>move_down</code>.</li><li>Clique no <b>+</b> de cada ação e aperte a tecla: <b>A/D/W/S</b> e as <b>setas</b>.</li><li>Opcional: adicione o <b>analógico esquerdo</b> do controle (Eixo do Joypad).</li></ol><div class="callout native"><b>Ferramenta nativa</b> O código pede "move_left", não "tecla A". Trocar ou adicionar controles depois não mexe em nenhuma linha de código.</div></div><div class="media n1"><figure class=""><img src="img/a07_ps_input_map.png" style="" alt="Configurações: Mapa de Entrada"></figure></div></div></section>
+<section class="slide content " data-title="Estrutura de pastas"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 1.7</span><h2>Estrutura de pastas</h2></header><div class="body full"><div class="text"><p>No painel <b>Arquivos</b>: botão direito em <code>res://</code> → <b>Nova Pasta</b>.</p><table><thead><tr><th>Pasta</th><th>O que guarda</th></tr></thead><tbody><tr><td><code class="path">autoload/</code></td><td>Managers globais (GameManager)</td></tr><tr><td><code class="path">components/</code></td><td>Componentes reutilizáveis</td></tr><tr><td><code class="path">entities/player/</code></td><td>Cena e script da nave</td></tr><tr><td><code class="path">entities/asteroid/</code></td><td>Cena e script do asteroide</td></tr><tr><td><code class="path">systems/asteroid_spawner/</code></td><td>Gerador de asteroides</td></tr><tr><td><code class="path">levels/game/</code></td><td>A fase principal</td></tr><tr><td><code class="path">levels/background/</code></td><td>Fundo animado</td></tr><tr><td><code class="path">ui/</code></td><td>HUD, Game Over, Menu e tema</td></tr><tr><td><code class="path">assets/sprites/</code></td><td>Artes (2ª parte do curso)</td></tr></tbody></table><div class="callout tip"><b>Dica</b> Cada cena fica numa pasta junto com seu script. Fica fácil achar e reaproveitar.</div></div></div></section>
+<section class="slide content " data-title="Player: criando a cena"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 2.1</span><h2>Player: criando a cena</h2></header><div class="body wide-img"><div class="text"><ol><li><b>Cena → Nova Cena</b> → <b>Outro Nó</b>.</li><li>Busque <b>CharacterBody2D</b> e clique em <b>Criar</b>.</li><li>Renomeie para <b>Player</b> (<kbd>F2</kbd>).</li><li>Com o Player selecionado, <kbd>Ctrl</kbd> + <kbd>A</kbd> (Adicionar Nó Filho): <b>Sprite2D</b>.</li><li>De novo: <b>CollisionShape2D</b>.</li><li>Salve (<kbd>Ctrl</kbd> + <kbd>S</kbd>) em <code class="path">entities/player/player.tscn</code></li></ol><div class="callout why"><b>Por quê?</b> <b>CharacterBody2D</b> é o nó feito para personagens controlados pelo jogador: ele se move com <code>move_and_slide()</code> e para nas paredes sozinho.</div></div><div class="media n1"><figure class=""><img src="img/a14_create_characterbody.png" style="" alt="Janela Criar Novo Nó"><figcaption>Janela Criar Novo Nó</figcaption></figure></div></div></section>
+<section class="slide content " data-title="Player: sprite e colisão"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 2.2</span><h2>Player: sprite e colisão</h2></header><div class="body split"><div class="text"><ol><li>Selecione <b>Sprite2D</b> → arraste o <code>icon.svg</code> dos Arquivos para <b>Texture</b>.</li><li>Em <b>Transform → Scale</b> coloque <code>0.25</code> (o ícone tem 128px → fica 32px).</li><li>Selecione <b>CollisionShape2D</b> → <b>Shape</b> → <b>Novo CircleShape2D</b>.</li><li>Clique no círculo e ajuste <b>Radius</b> = <code>12</code> (um pouco menor que a nave = jogo mais justo).</li></ol><div class="callout warn"><b>Atenção</b> Desenhe a nave da 2ª parte <b>apontando para a direita</b>. No Godot, ângulo 0 = direita.</div></div><div class="media n2 row"><figure class="tall"><img src="img/a12_player_sprite_scale_side.png" style="height:690px" alt="Player: sprite e colisão"></figure><figure class="tall"><img src="img/a13_player_collision_shape_insp.png" style="height:690px" alt="Player: sprite e colisão"></figure></div></div></section>
+<section class="slide content " data-title="Player: propriedades no Inspetor"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 2.3</span><h2>Player: propriedades no Inspetor</h2></header><div class="body split"><div class="text"><ol><li>Selecione o nó <b>Player</b>.</li><li><b>Motion Mode</b> = <code>Floating</code> (jogo visto de cima, sem chão).</li><li><b>Collision → Layer</b>: só a <b>1</b> (player).</li><li><b>Collision → Mask</b>: só a <b>3</b> (paredes).</li></ol><div class="callout tip"><b>Dica</b> Passe o mouse sobre os quadradinhos de Layer/Mask: aparecem os nomes que demos (player, asteroides, paredes).</div></div><div class="media n2 row"><figure class="tall"><img src="img/a09_player_motion_mode_side.png" style="height:690px" alt="Player: propriedades no Inspetor"></figure><figure class="tall"><img src="img/a10_player_collision_insp.png" style="height:690px" alt="Player: propriedades no Inspetor"></figure></div></div></section>
+<section class="slide code " data-title="Player: script de movimento"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 2.4</span><h2>Player: script de movimento</h2></header><div class="code-wrap"><div class="note">Selecione o Player → botão <b>Anexar Script</b> (pergaminho com +) → salve em <code>entities/player/player.gd</code>. <code>@export</code> faz a variável aparecer no Inspetor: dá para ajustar a velocidade sem abrir o código.</div><div class="codebox"><div class="codebar"><span>entities/player/player.gd</span><button class="copy" data-copy="15">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">Player</span>
+<span class="k">extends</span> <span class="t">CharacterBody2D</span>
+
+
+<span class="c">## Velocidade máxima da nave (pixels por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> speed: <span class="t">float</span> = <span class="d">180.0</span>
+<span class="c">## Quão rápido a nave acelera e freia.</span>
+<span class="a">@export</span> <span class="k">var</span> acceleration: <span class="t">float</span> = <span class="d">900.0</span>
+<span class="c">## Quão rápido a nave gira para a direção do movimento.</span>
+<span class="a">@export</span> <span class="k">var</span> rotation_speed: <span class="t">float</span> = <span class="d">10.0</span>
+
+
+<span class="k">func</span> <span class="f">_physics_process</span>(delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	<span class="k">var</span> direction := <span class="t">Input</span>.<span class="f">get_vector</span>(<span class="s">&quot;move_left&quot;</span>, <span class="s">&quot;move_right&quot;</span>, <span class="s">&quot;move_up&quot;</span>, <span class="s">&quot;move_down&quot;</span>)
+	velocity = velocity.<span class="f">move_toward</span>(direction * speed, acceleration * delta)
+	<span class="f">move_and_slide</span>()
+
+	<span class="k">if</span> direction != <span class="t">Vector2</span>.ZERO:
+		rotation = <span class="f">lerp_angle</span>(rotation, direction.<span class="f">angle</span>(), rotation_speed * delta)</code></pre></div></div></section>
+<section class="slide content " data-title="Entendendo o movimento"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 2.5</span><h2>Entendendo o movimento</h2></header><div class="body wide-img"><div class="text"><ul><li><code>Input.get_vector(...)</code> junta as 4 ações num vetor de direção (já normalizado, funciona com analógico).</li><li><code>velocity.move_toward(alvo, aceleração * delta)</code> acelera e freia suavemente, dando sensação de nave.</li><li><code>move_and_slide()</code> move o corpo e respeita colisões (as paredes).</li><li><code>lerp_angle</code> gira a nave aos poucos para onde ela está indo.</li><li><code>delta</code> = tempo desde o último frame. Multiplicar por delta deixa o jogo igual em qualquer PC.</li></ul><div class="callout tip"><b>Dica</b> Mude <b>Speed</b>, <b>Acceleration</b> e <b>Rotation Speed</b> no Inspetor com o jogo rodando e sinta a diferença.</div></div><div class="media n1"><figure class=""><img src="img/a15_player_script_main.png" style="" alt="Script aberto na tela Script"><figcaption>Script aberto na tela Script</figcaption></figure></div></div></section>
+<section class="slide content " data-title="Cena Game e as paredes"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 3.1</span><h2>Cena Game e as paredes</h2></header><div class="body wide-img"><div class="text"><ol><li><b>Nova Cena</b> → <b>Cena 2D</b> (Node2D) → renomeie <b>Game</b>. Salve em <code class="path">levels/game/game.tscn</code></li><li>Adicione um <b>StaticBody2D</b> chamado <b>Walls</b>. Layer = <b>3</b> (paredes), Mask = nenhuma.</li><li>Dentro dele, 4× <b>CollisionShape2D</b> com Shape <b>WorldBoundaryShape2D</b> (Bottom, Top, Left, Right).</li><li>Posicione cada uma (tabela ao lado). A seta vermelha aponta para <b>dentro</b> da tela.</li></ol><table><thead><tr><th>Nó</th><th>Position</th><th>Rotation</th></tr></thead><tbody><tr><td>Bottom</td><td>(320, 360)</td><td>0°</td></tr><tr><td>Top</td><td>(320, 0)</td><td>180°</td></tr><tr><td>Left</td><td>(0, 180)</td><td>90°</td></tr><tr><td>Right</td><td>(640, 180)</td><td>-90°</td></tr></tbody></table><div class="callout native"><b>Ferramenta nativa</b> <b>WorldBoundaryShape2D</b> é uma parede infinita. Dá para criar a primeira e depois <b>Duplicar</b> (<kbd>Ctrl</kbd> + <kbd>D</kbd>), usando o <b>mesmo</b> shape.</div></div><div class="media n1"><figure class=""><img src="img/a16_game_walls_view.png" style="" alt="Cena Game e as paredes"></figure></div></div></section>
+<section class="slide content " data-title="Colocando o Player na fase"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 3.2</span><h2>Colocando o Player na fase</h2></header><div class="body wide-img"><div class="text"><ol><li>Arraste <code class="path">entities/player/player.tscn</code> dos Arquivos para o viewport da cena Game (ou use o botão <b>Instanciar Cena Filha</b>, o elo de corrente).</li><li>Position do Player = <code>(320, 180)</code> (centro da tela).</li><li>Defina Game como cena principal: botão direito em <code>game.tscn</code> → <b>Definir como Cena Principal</b>.</li><li>Aperte <kbd>F5</kbd> e voe com WASD/setas!</li></ol><div class="callout tip"><b>Dica</b> O retângulo azul no viewport é a tela do jogo (640×360).</div></div><div class="media n1"><figure class=""><img src="img/run_aula1_player.png" style="" alt="A nave presa dentro das paredes"><figcaption>A nave presa dentro das paredes</figcaption></figure></div></div></section>
+<section class="slide content " data-title="Asteroide: um corpo físico"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 4.1</span><h2>Asteroide: um corpo físico</h2></header><div class="body split"><div class="text"><ol><li>Nova cena com raiz <b>RigidBody2D</b> → renomeie <b>Asteroid</b>. Salve em <code class="path">entities/asteroid/asteroid.tscn</code></li><li>Filhos: <b>Sprite2D</b> (icon.svg, Scale 0.25, Modulate laranja), <b>CollisionShape2D</b> (círculo, raio 14) e <b>VisibleOnScreenNotifier2D</b>.</li><li>No Asteroid: <b>Gravity Scale</b> = <code>0</code> (espaço não tem gravidade!).</li><li><b>Linear → Damp Mode</b> = <code>Replace</code> e <b>Angular → Damp Mode</b> = <code>Replace</code> (com Damp 0 ele não perde velocidade).</li><li><b>Layer</b> = 2 (asteroides), <b>Mask</b> = nenhuma (atravessa tudo).</li></ol><div class="callout native"><b>Ferramenta nativa</b> O <b>RigidBody2D</b> é movido pelo motor de física: a gente só dá a velocidade inicial e o Godot faz o resto, inclusive o giro.</div></div><div class="media n2 row"><figure class="tall"><img src="img/a19_asteroid_gravity_side.png" style="height:690px" alt="Asteroide: um corpo físico"></figure><figure class="tall"><img src="img/a20_asteroid_damp_insp.png" style="height:690px" alt="Asteroide: um corpo físico"></figure></div></div></section>
+<section class="slide content " data-title="Asteroide: sumir ao sair da tela (sem código!)"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 4.2</span><h2>Asteroide: sumir ao sair da tela (sem código!)</h2></header><div class="body split"><div class="text"><ol><li>Selecione <b>VisibleOnScreenNotifier2D</b> → aba <b>Sinais</b>.</li><li>Duplo clique em <code>screen_exited()</code>.</li><li>Escolha o nó <b>Asteroid</b> e clique em <b>Escolher</b> ao lado do Método Receptor.</li><li>Selecione <code>queue_free</code> (desligue "Somente Métodos de Script" se ele não aparecer) → <b>Conectar</b>.</li></ol><div class="callout why"><b>Por quê?</b> Sem isso, os asteroides que saem da tela continuariam existindo para sempre e o jogo ficaria lento.</div><div class="callout native"><b>Ferramenta nativa</b> Conectamos um sinal direto a uma função que já existe em todo nó (<code>queue_free</code> = "me apague"). Zero linhas de código.</div></div><div class="media n1"><figure class="tall"><img src="img/a22_asteroid_notifier_signal_side.png" style="height:690px" alt="Asteroide: sumir ao sair da tela (sem código!)"></figure></div></div></section>
+<section class="slide code " data-title="Asteroide: script"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 4.3</span><h2>Asteroide: script</h2></header><div class="code-wrap"><div class="note"><code>class_name Asteroid</code> registra um tipo novo: outros scripts podem escrever <code>var a: Asteroid</code>. Quem chama <code>launch()</code> é o spawner, que diz a direção.</div><div class="codebox"><div class="codebar"><span>entities/asteroid/asteroid.gd</span><button class="copy" data-copy="21">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">Asteroid</span>
+<span class="k">extends</span> <span class="t">RigidBody2D</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> min_speed: <span class="t">float</span> = <span class="d">60.0</span>
+<span class="a">@export</span> <span class="k">var</span> max_speed: <span class="t">float</span> = <span class="d">120.0</span>
+<span class="c">## Velocidade máxima de giro (radianos por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> max_spin: <span class="t">float</span> = <span class="d">3.0</span>
+
+
+<span class="c">## Lança o asteroide em uma direção. Quem chama é o AsteroidSpawner.</span>
+<span class="k">func</span> <span class="f">launch</span>(direction: <span class="t">Vector2</span>, speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span>) -&gt; <span class="t">void</span>:
+	linear_velocity = direction * <span class="f">randf_range</span>(min_speed, max_speed) * speed_multiplier
+	angular_velocity = <span class="f">randf_range</span>(-max_spin, max_spin)</code></pre></div></div></section>
+<section class="slide content " data-title="Spawner: o caminho em volta da tela"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 5.1</span><h2>Spawner: o caminho em volta da tela</h2></header><div class="body wide-img"><div class="text"><ol><li>Nova cena com raiz <b>Node2D</b> → <b>AsteroidSpawner</b>. Salve em <code class="path">systems/asteroid_spawner/asteroid_spawner.tscn</code></li><li>Adicione <b>Path2D</b> (renomeie <b>SpawnPath</b>).</li><li>Com ele selecionado, use a ferramenta <b>Adicionar Ponto</b> da barra do viewport e clique nos 4 cantos <b>por fora</b> do retângulo azul: (-32,-32), (672,-32), (672,392), (-32,392).</li><li>Clique em <b>Fechar Curva</b>.</li><li>Dentro do SpawnPath, adicione <b>PathFollow2D</b> (<b>SpawnPoint</b>) e desligue <b>Rotates</b>.</li></ol><div class="callout tip"><b>Dica</b> Não precisa ser exato: basta o retângulo ficar um pouco fora da tela, para o asteroide nascer escondido.</div></div><div class="media n1"><figure class=""><img src="img/a24_spawner_path_view.png" style="" alt="Spawner: o caminho em volta da tela"></figure></div></div></section>
+<section class="slide content " data-title="Spawner: o Timer"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 5.2</span><h2>Spawner: o Timer</h2></header><div class="body wide-img"><div class="text"><ol><li>Adicione um <b>Timer</b> (renomeie <b>SpawnTimer</b>) como filho do AsteroidSpawner.</li><li><b>Wait Time</b> = 1 e <b>Autostart</b> = ligado.</li><li>Anexe um script vazio ao AsteroidSpawner (próximo slide).</li><li>Selecione o SpawnTimer → aba <b>Sinais</b> → duplo clique em <code>timeout()</code> → escolha <b>AsteroidSpawner</b> → <b>Conectar</b>.</li></ol><div class="callout native"><b>Ferramenta nativa</b> O Godot cria a função <code>_on_spawn_timer_timeout</code> no script para você. O ícone verde ao lado do sinal mostra que ele está conectado.</div></div><div class="media n2 row"><figure class="tall"><img src="img/a26_spawner_timer_side.png" style="height:690px" alt="Spawner: o Timer"></figure><figure class="dialog"><img src="img/a28_connect_dialog.png" style="" alt="Spawner: o Timer"></figure></div></div></section>
+<section class="slide code " data-title="Spawner: script (versão Aula 1) (1/2)"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 5.3</span><h2>Spawner: script (versão Aula 1) (1/2)</h2></header><div class="code-wrap"><div class="note">Depois de salvar, selecione o AsteroidSpawner e arraste <code>asteroid.tscn</code> para a propriedade <b>Asteroid Scene</b> no Inspetor.</div><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="24">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">AsteroidSpawner</span>
+<span class="k">extends</span> <span class="t">Node2D</span>
+<span class="c">## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> asteroid_scene: <span class="t">PackedScene</span>
+
+<span class="a">@onready</span> <span class="k">var</span> spawn_point: <span class="t">PathFollow2D</span> = <span class="n">$SpawnPath</span>/SpawnPoint
+
+
+<span class="k">func</span> <span class="f">_on_spawn_timer_timeout</span>() -&gt; <span class="t">void</span>:
+	spawn_point.progress_ratio = <span class="f">randf</span>()
+	<span class="k">var</span> asteroid: <span class="t">Asteroid</span> = asteroid_scene.<span class="f">instantiate</span>()
+	<span class="f">add_child</span>(asteroid)
+	asteroid.global_position = spawn_point.global_position
+
+	<span class="k">var</span> target := <span class="f">_pick_target</span>()
+	asteroid.<span class="f">launch</span>(asteroid.global_position.<span class="f">direction_to</span>(target))</code></pre></div></div></section>
+<section class="slide code " data-title="Spawner: script (versão Aula 1) (2/2)"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 5.3</span><h2>Spawner: script (versão Aula 1) (2/2)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="25">Copiar</button></div><pre><code><span class="c">## Escolhe um ponto qualquer da tela para o asteroide atravessar.</span>
+<span class="k">func</span> <span class="f">_pick_target</span>() -&gt; <span class="t">Vector2</span>:
+	<span class="k">var</span> screen := <span class="f">get_viewport_rect</span>().size
+	<span class="k">return</span> <span class="t">Vector2</span>(<span class="f">randf_range</span>(<span class="d">0</span>, screen.x), <span class="f">randf_range</span>(<span class="d">0</span>, screen.y))</code></pre></div></div></section>
+<section class="slide content " data-title="Juntando tudo"><header><span class="crumb">Aula 1</span><span class="chip">Etapa 5.4</span><h2>Juntando tudo</h2></header><div class="body wide-img"><div class="text"><ol><li>Abra a cena <b>Game</b> e instancie <code>asteroid_spawner.tscn</code>.</li><li>Arraste o AsteroidSpawner para <b>cima</b> do Player na árvore (assim a nave é desenhada por cima dos asteroides).</li><li>Aperte <kbd>F5</kbd>.</li></ol><div class="callout warn"><b>Atenção</b> Os asteroides ainda atravessam a nave: o dano vem na Aula 2 com os <b>componentes</b>.</div></div><div class="media n1"><figure class=""><img src="img/run_aula1.png" style="" alt="Fim da Aula 1: a nave desviando de asteroides"><figcaption>Fim da Aula 1: a nave desviando de asteroides</figcaption></figure></div></div></section>
+<section class="slide recap " data-title="Resumo da Aula 1"><header><span class="crumb">Aula 1</span><h2>Resumo da Aula 1</h2></header><div class="body full"><div class="text"><ul><li>Configuramos resolução, pixel art, camadas de física e controles <b>pelo editor</b>.</li><li><b>CharacterBody2D</b> para a nave, <b>RigidBody2D</b> para os asteroides, <b>StaticBody2D</b> para as paredes.</li><li><b>Path2D + PathFollow2D + Timer</b> para gerar asteroides em volta da tela.</li><li><b>Sinais</b> conectados pelo editor, inclusive direto para <code>queue_free</code>.</li></ul><div class="callout tip"><b>Dica</b> Projeto deste ponto: pasta <b>projeto/checkpoint-aula1</b> do repositório.</div></div></div></section>
+<section class="slide section " data-title="Aula 2"><div class="section-wrap"><p class="kicker">Aula 2</p><h1>Vida, game over, menu, dificuldade e preparação para a arte</h1><ol class="steps"><li><span>1</span>GameManager</li><li><span>2</span>HUD</li><li><span>3</span>Componentes</li><li><span>4</span>Game Over</li><li><span>5</span>Menu</li><li><span>6</span>Dificuldade</li><li><span>7</span>Fundo e tema</li><li><span>8</span>Preparar a arte</li></ol></div></section>
+<section class="slide code " data-title="GameManager: o cérebro da partida (1/4)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 6.1</span><h2>GameManager: o cérebro da partida (1/4)</h2></header><div class="code-wrap"><div class="note">Crie em <code>autoload/game_manager.gd</code> (Arquivos → botão direito → <b>Novo → Script</b>, herdando de <b>Node</b>).</div><div class="codebox"><div class="codebar"><span>autoload/game_manager.gd</span><button class="copy" data-copy="29">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">Node</span>
+<span class="c">## GameManager (Autoload): guarda o estado da partida e o recorde.</span>
+<span class="c">## Qualquer script do jogo pode acessar com GameManager.alguma_coisa</span>
+
+
+<span class="c">## Avisa que uma partida nova começou.</span>
+<span class="k">signal</span> game_started
+<span class="c">## Avisa que o jogador morreu e a partida acabou.</span>
+<span class="k">signal</span> game_over
+
+<span class="k">const</span> GAME_SCENE := <span class="s">&quot;res://levels/game/game.tscn&quot;</span>
+<span class="k">const</span> MENU_SCENE := <span class="s">&quot;res://ui/main_menu/main_menu.tscn&quot;</span>
+<span class="k">const</span> SAVE_PATH := <span class="s">&quot;user://save.cfg&quot;</span>
+
+<span class="k">var</span> time_survived: <span class="t">float</span> = <span class="d">0.0</span>
+<span class="k">var</span> best_time: <span class="t">float</span> = <span class="d">0.0</span>
+<span class="k">var</span> is_playing: <span class="t">bool</span> = <span class="k">false</span></code></pre></div></div></section>
+<section class="slide code " data-title="GameManager: o cérebro da partida (2/4)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 6.1</span><h2>GameManager: o cérebro da partida (2/4)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>autoload/game_manager.gd</span><button class="copy" data-copy="30">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="f">load_best_time</span>()
+
+
+<span class="k">func</span> <span class="f">_process</span>(delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	<span class="k">if</span> is_playing:
+		time_survived += delta
+
+
+<span class="k">func</span> <span class="f">start_game</span>() -&gt; <span class="t">void</span>:
+	time_survived = <span class="d">0.0</span>
+	is_playing = <span class="k">true</span>
+	game_started.<span class="f">emit</span>()</code></pre></div></div></section>
+<section class="slide code " data-title="GameManager: o cérebro da partida (3/4)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 6.1</span><h2>GameManager: o cérebro da partida (3/4)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>autoload/game_manager.gd</span><button class="copy" data-copy="31">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">end_game</span>() -&gt; <span class="t">void</span>:
+	<span class="k">if</span> <span class="k">not</span> is_playing:
+		<span class="k">return</span>
+	is_playing = <span class="k">false</span>
+	<span class="k">if</span> time_survived &gt; best_time:
+		best_time = time_survived
+		<span class="f">save_best_time</span>()
+	game_over.<span class="f">emit</span>()
+
+
+<span class="k">func</span> <span class="f">go_to_game</span>() -&gt; <span class="t">void</span>:
+	<span class="f">get_tree</span>().<span class="f">change_scene_to_file</span>(GAME_SCENE)
+
+
+<span class="k">func</span> <span class="f">go_to_menu</span>() -&gt; <span class="t">void</span>:
+	is_playing = <span class="k">false</span>
+	<span class="f">get_tree</span>().<span class="f">change_scene_to_file</span>(MENU_SCENE)</code></pre></div></div></section>
+<section class="slide code " data-title="GameManager: o cérebro da partida (4/4)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 6.1</span><h2>GameManager: o cérebro da partida (4/4)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>autoload/game_manager.gd</span><button class="copy" data-copy="32">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">save_best_time</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> config := <span class="t">ConfigFile</span>.<span class="f">new</span>()
+	config.<span class="f">set_value</span>(<span class="s">&quot;score&quot;</span>, <span class="s">&quot;best_time&quot;</span>, best_time)
+	config.<span class="f">save</span>(SAVE_PATH)
+
+
+<span class="k">func</span> <span class="f">load_best_time</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> config := <span class="t">ConfigFile</span>.<span class="f">new</span>()
+	<span class="k">if</span> config.<span class="f">load</span>(SAVE_PATH) == <span class="t">OK</span>:
+		best_time = config.<span class="f">get_value</span>(<span class="s">&quot;score&quot;</span>, <span class="s">&quot;best_time&quot;</span>, <span class="d">0.0</span>)</code></pre></div></div></section>
+<section class="slide content " data-title="Registrando o Autoload"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 6.2</span><h2>Registrando o Autoload</h2></header><div class="body wide-img"><div class="text"><ol><li><b>Projeto → Configurações do Projeto</b> → aba <b>Globais</b> → <b>Autoload</b>.</li><li>Clique em <b>Selecionar Script/Cena</b> e escolha <code class="path">autoload/game_manager.gd</code>.</li><li>Confira o nome <b>GameManager</b> e deixe <b>Variável Global</b> habilitada.</li></ol><div class="callout why"><b>Por quê?</b> Um <b>Autoload</b> é carregado antes de qualquer cena e nunca é apagado. Qualquer script pode escrever <code>GameManager.best_time</code>.</div><div class="callout tip"><b>Dica</b> Por isso ele guarda o que precisa sobreviver à troca de cena: recorde, estado da partida, e é ele quem troca de cena.</div></div><div class="media n1"><figure class=""><img src="img/b01_ps_autoload.png" style="" alt="Registrando o Autoload"></figure></div></div></section>
+<section class="slide code " data-title="Game: avisando que a partida começou"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 6.3</span><h2>Game: avisando que a partida começou</h2></header><div class="code-wrap"><div class="note">Anexe este script ao nó raiz <b>Game</b>. Toda vez que a cena Game carrega, o cronômetro zera e começa.</div><div class="codebox"><div class="codebar"><span>levels/game/game.gd</span><button class="copy" data-copy="34">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">Node2D</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">start_game</span>()</code></pre></div></div></section>
+<section class="slide content " data-title="HUD: tempo e recorde"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 7.1</span><h2>HUD: tempo e recorde</h2></header><div class="body wide-img"><div class="text"><ol><li>Nova cena com raiz <b>CanvasLayer</b> → <b>HUD</b>. Salve em <code class="path">ui/hud/hud.tscn</code></li><li>Filhos: <b>MarginContainer</b> (Layout <b>Top Wide</b>, margens 8/4/8) → <b>HBoxContainer</b> → 2× <b>Label</b>.</li><li><b>TimeLabel</b> e <b>BestLabel</b>: Size Flags Horizontal = <b>Expand</b>. No BestLabel, Horizontal Alignment = <b>Right</b>.</li><li>Botão direito em cada Label → <b>Acessar como Nome Único</b> (aparece o <code>%</code>).</li><li>Instancie o HUD na cena Game.</li></ol><div class="callout native"><b>Ferramenta nativa</b> <b>CanvasLayer</b> desenha por cima do jogo e não se mexe com a câmera. <b>Containers</b> organizam a UI sozinhos.</div></div><div class="media n1"><figure class=""><img src="img/b10_hud_view.png" style="" alt="HUD: tempo e recorde"></figure></div></div></section>
+<section class="slide code " data-title="HUD: script"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 7.2</span><h2>HUD: script</h2></header><div class="code-wrap"><div class="note"><code>%TimeLabel</code> acha o nó pelo <b>nome único</b>: funciona mesmo se você mudar o Label de lugar na árvore.</div><div class="codebox"><div class="codebar"><span>ui/hud/hud.gd</span><button class="copy" data-copy="36">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">CanvasLayer</span>
+
+
+<span class="a">@onready</span> <span class="k">var</span> time_label: <span class="t">Label</span> = <span class="n">%TimeLabel</span>
+<span class="a">@onready</span> <span class="k">var</span> best_label: <span class="t">Label</span> = <span class="n">%BestLabel</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	best_label.text = <span class="s">&quot;Recorde: %.1f s&quot;</span> % <span class="t">GameManager</span>.best_time
+
+
+<span class="k">func</span> <span class="f">_process</span>(_delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	time_label.text = <span class="s">&quot;Tempo: %.1f s&quot;</span> % <span class="t">GameManager</span>.time_survived</code></pre></div></div></section>
+<section class="slide content " data-title="Componentes: por quê?"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.1</span><h2>Componentes: por quê?</h2></header><div class="body wide-img"><div class="text"><ul><li>A nave precisa de <b>vida</b> e de uma <b>área que recebe dano</b>.</li><li>Inimigos, chefões e escudos (no futuro) também precisam disso.</li><li>Em vez de copiar código, criamos <b>componentes</b>: nós com <code>class_name</code> que aparecem na janela <b>Criar Novo Nó</b> igual aos nós do Godot.</li><li><b>HealthComponent</b> (Node): guarda a vida e emite <code>died</code>.</li><li><b>HurtboxComponent</b> (Area2D): quando algo perigoso encosta, tira vida do HealthComponent.</li></ul><div class="callout why"><b>Por quê?</b> Componente bom não sabe quem é o dono. O HealthComponent não sabe que está numa nave: só avisa "morri".</div></div><div class="media n1"><figure class="dialog"><img src="img/b03_create_component.png" style="" alt="Nossos componentes na busca de nós"><figcaption>Nossos componentes na busca de nós</figcaption></figure></div></div></section>
+<section class="slide code " data-title="HealthComponent (1/2)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.2</span><h2>HealthComponent (1/2)</h2></header><div class="code-wrap"><div class="note">Crie em <code>components/health_component.gd</code>. <code>max_health</code> = 1 hoje; amanhã 3 corações é só mudar no Inspetor.</div><div class="codebox"><div class="codebar"><span>components/health_component.gd</span><button class="copy" data-copy="38">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">HealthComponent</span>
+<span class="k">extends</span> <span class="t">Node</span>
+<span class="c">## Componente de vida: guarda a vida de quem for &quot;dono&quot; dele e avisa quando morrer.</span>
+<span class="c">## Pode ser usado no player, em inimigos, em chefões...</span>
+
+
+<span class="c">## Emitido sempre que a vida muda (útil para barras de vida e corações).</span>
+<span class="k">signal</span> <span class="f">health_changed</span>(current: <span class="t">int</span>, maximum: <span class="t">int</span>)
+<span class="c">## Emitido quando a vida chega a zero.</span>
+<span class="k">signal</span> died
+
+<span class="a">@export</span> <span class="k">var</span> max_health: <span class="t">int</span> = <span class="d">1</span>
+
+<span class="k">var</span> current_health: <span class="t">int</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	current_health = max_health</code></pre></div></div></section>
+<section class="slide code " data-title="HealthComponent (2/2)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.2</span><h2>HealthComponent (2/2)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>components/health_component.gd</span><button class="copy" data-copy="39">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">take_damage</span>(amount: <span class="t">int</span>) -&gt; <span class="t">void</span>:
+	<span class="k">if</span> current_health &lt;= <span class="d">0</span>:
+		<span class="k">return</span>
+	current_health = <span class="f">maxi</span>(current_health - amount, <span class="d">0</span>)
+	health_changed.<span class="f">emit</span>(current_health, max_health)
+	<span class="k">if</span> current_health == <span class="d">0</span>:
+		died.<span class="f">emit</span>()
+
+
+<span class="k">func</span> <span class="f">heal</span>(amount: <span class="t">int</span>) -&gt; <span class="t">void</span>:
+	current_health = <span class="f">mini</span>(current_health + amount, max_health)
+	health_changed.<span class="f">emit</span>(current_health, max_health)</code></pre></div></div></section>
+<section class="slide code " data-title="HurtboxComponent"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.3</span><h2>HurtboxComponent</h2></header><div class="code-wrap"><div class="note">Aqui o sinal é conectado por código porque faz parte do próprio componente: quem usa o componente não precisa lembrar de conectar nada.</div><div class="codebox"><div class="codebar"><span>components/hurtbox_component.gd</span><button class="copy" data-copy="40">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">HurtboxComponent</span>
+<span class="k">extends</span> <span class="t">Area2D</span>
+<span class="c">## Componente &quot;área de dano&quot;: quando um corpo perigoso encosta nele,</span>
+<span class="c">## tira vida do HealthComponent ligado no Inspector.</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> health_component: <span class="t">HealthComponent</span>
+<span class="a">@export</span> <span class="k">var</span> damage_per_hit: <span class="t">int</span> = <span class="d">1</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	body_entered.<span class="f">connect</span>(_on_body_entered)
+
+
+<span class="k">func</span> <span class="f">_on_body_entered</span>(_body: <span class="t">Node2D</span>) -&gt; <span class="t">void</span>:
+	health_component.<span class="f">take_damage</span>(damage_per_hit)</code></pre></div></div></section>
+<section class="slide content " data-title="Encaixando os componentes no Player"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.4</span><h2>Encaixando os componentes no Player</h2></header><div class="body split"><div class="text"><ol><li>Abra <b>player.tscn</b> → <kbd>Ctrl</kbd> + <kbd>A</kbd> → busque <b>HealthComponent</b> → Criar.</li><li><kbd>Ctrl</kbd> + <kbd>A</kbd> → <b>HurtboxComponent</b> → dê a ele um <b>CollisionShape2D</b> (círculo raio 10).</li><li>No HurtboxComponent: <b>Health Component</b> → <b>Atribuir</b> → escolha o HealthComponent.</li><li>Collision: <b>Layer</b> nenhuma, <b>Mask</b> = 2 (asteroides).</li><li>No nó Player → aba <b>Grupos</b> → adicione o grupo <code>player</code> (usaremos na dificuldade).</li></ol><div class="callout native"><b>Ferramenta nativa</b> A ligação entre componentes é feita <b>no Inspetor</b> (export), não com caminhos escritos no código.</div></div><div class="media n2 row"><figure class="tall"><img src="img/b04_player_hurtbox_side.png" style="height:690px" alt="Encaixando os componentes no Player"></figure><figure class="tall"><img src="img/b05_hurtbox_collision_insp.png" style="height:690px" alt="Encaixando os componentes no Player"></figure></div></div></section>
+<section class="slide content " data-title="Explosão com partículas"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.5</span><h2>Explosão com partículas</h2></header><div class="body split"><div class="text"><ol><li>No Player, adicione <b>CPUParticles2D</b> → <b>DeathParticles</b>.</li><li><b>Emitting</b> desligado, <b>One Shot</b> ligado, <b>Explosiveness</b> 1.</li><li>Amount 32, Lifetime 0.8, Spread 180°, Gravity (0, 0).</li><li>Initial Velocity 40–140, Damping 60–100, Scale Amount 2–4, Color laranja.</li></ol><div class="callout native"><b>Ferramenta nativa</b> Mexa nos valores com o nó selecionado: o viewport mostra a explosão em tempo real (menu <b>CPUParticles2D → Restart Emission</b>).</div></div><div class="media n1"><figure class="tall"><img src="img/b08_particles_side.png" style="height:690px" alt="Explosão com partículas"></figure></div></div></section>
+<section class="slide content " data-title="Conectando a morte"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.6</span><h2>Conectando a morte</h2></header><div class="body split"><div class="text"><ol><li>Selecione o <b>HealthComponent</b> → aba <b>Sinais</b>.</li><li>Duplo clique em <code>died()</code> → escolha o nó <b>Player</b> → <b>Conectar</b>.</li><li>O Godot cria <code>_on_health_component_died</code> no player.gd. Complete com o código do próximo slide.</li></ol><div class="callout native"><b>Ferramenta nativa</b> Repare: o sinal <code>died</code> que criamos no nosso script aparece na aba Sinais igualzinho aos sinais nativos.</div></div><div class="media n1"><figure class="tall"><img src="img/b07_health_signal_side.png" style="height:690px" alt="Conectando a morte"></figure></div></div></section>
+<section class="slide code " data-title="Player: script final (1/2)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.7</span><h2>Player: script final (1/2)</h2></header><div class="code-wrap"><div class="note">Novidades: as variáveis <code>@onready</code> e a função <code>_on_health_component_died</code>. Ao morrer a nave some, explode e avisa o GameManager.</div><div class="codebox"><div class="codebar"><span>entities/player/player.gd</span><button class="copy" data-copy="44">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">Player</span>
+<span class="k">extends</span> <span class="t">CharacterBody2D</span>
+
+
+<span class="c">## Velocidade máxima da nave (pixels por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> speed: <span class="t">float</span> = <span class="d">180.0</span>
+<span class="c">## Quão rápido a nave acelera e freia.</span>
+<span class="a">@export</span> <span class="k">var</span> acceleration: <span class="t">float</span> = <span class="d">900.0</span>
+<span class="c">## Quão rápido a nave gira para a direção do movimento.</span>
+<span class="a">@export</span> <span class="k">var</span> rotation_speed: <span class="t">float</span> = <span class="d">10.0</span>
+
+<span class="a">@onready</span> <span class="k">var</span> sprite: <span class="t">Sprite2D</span> = <span class="n">$<span class="t">Sprite2D</span></span>
+<span class="a">@onready</span> <span class="k">var</span> death_particles: <span class="t">CPUParticles2D</span> = <span class="n">$DeathParticles</span></code></pre></div></div></section>
+<section class="slide code " data-title="Player: script final (2/2)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 8.7</span><h2>Player: script final (2/2)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>entities/player/player.gd</span><button class="copy" data-copy="45">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">_physics_process</span>(delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	<span class="k">var</span> direction := <span class="t">Input</span>.<span class="f">get_vector</span>(<span class="s">&quot;move_left&quot;</span>, <span class="s">&quot;move_right&quot;</span>, <span class="s">&quot;move_up&quot;</span>, <span class="s">&quot;move_down&quot;</span>)
+	velocity = velocity.<span class="f">move_toward</span>(direction * speed, acceleration * delta)
+	<span class="f">move_and_slide</span>()
+
+	<span class="k">if</span> direction != <span class="t">Vector2</span>.ZERO:
+		rotation = <span class="f">lerp_angle</span>(rotation, direction.<span class="f">angle</span>(), rotation_speed * delta)
+
+
+<span class="k">func</span> <span class="f">_on_health_component_died</span>() -&gt; <span class="t">void</span>:
+	<span class="f">set_physics_process</span>(<span class="k">false</span>)
+	sprite.<span class="f">hide</span>()
+	death_particles.emitting = <span class="k">true</span>
+	<span class="t">GameManager</span>.<span class="f">end_game</span>()</code></pre></div></div></section>
+<section class="slide content " data-title="Tela de Game Over"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 9.1</span><h2>Tela de Game Over</h2></header><div class="body wide-img"><div class="text"><ol><li>Nova cena <b>CanvasLayer</b> → <b>GameOver</b>, Layer = 10. Salve em <code class="path">ui/game_over/game_over.tscn</code></li><li><b>ColorRect</b> (Dim): Layout <b>Full Rect</b>, cor preta com alpha 0.6.</li><li><b>CenterContainer</b> (Full Rect) → <b>VBoxContainer</b> → Labels <b>TitleLabel</b> e <b>ResultLabel</b> (%) e Buttons <b>RestartButton</b> (%) e <b>MenuButton</b>.</li><li>Um <b>Timer</b> <b>ShowDelay</b> (Wait Time 1, One Shot) para dar tempo de ver a explosão.</li><li>Conecte pela aba Sinais: <code>pressed</code> dos 2 botões e <code>timeout</code> do ShowDelay.</li><li>Instancie o GameOver na cena Game e clique no <b>olho</b> dele para escondê-lo no editor (o script mostra a tela na hora certa).</li></ol></div><div class="media n2"><figure class=""><img src="img/b11_game_over_view.png" style="" alt="Tela de Game Over"></figure><figure class="tall"><img src="img/b12_game_over_timer_signal_side.png" style="height:690px" alt="Tela de Game Over"></figure></div></div></section>
+<section class="slide code " data-title="Game Over: script (1/2)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 9.2</span><h2>Game Over: script (1/2)</h2></header><div class="code-wrap"><div class="note">A tela começa escondida e só aparece quando o GameManager avisa <code>game_over</code>. <code>grab_focus()</code> deixa jogar de novo apertando Enter ou no controle.</div><div class="codebox"><div class="codebar"><span>ui/game_over/game_over.gd</span><button class="copy" data-copy="47">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">CanvasLayer</span>
+
+
+<span class="a">@onready</span> <span class="k">var</span> result_label: <span class="t">Label</span> = <span class="n">%ResultLabel</span>
+<span class="a">@onready</span> <span class="k">var</span> restart_button: <span class="t">Button</span> = <span class="n">%RestartButton</span>
+<span class="a">@onready</span> <span class="k">var</span> show_delay: <span class="t">Timer</span> = <span class="n">$ShowDelay</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="f">hide</span>()
+	<span class="t">GameManager</span>.game_over.<span class="f">connect</span>(_on_game_over)
+
+
+<span class="k">func</span> <span class="f">_on_game_over</span>() -&gt; <span class="t">void</span>:
+	<span class="c"># Espera um pouquinho para dar tempo de ver a explosão.</span>
+	show_delay.<span class="f">start</span>()</code></pre></div></div></section>
+<section class="slide code " data-title="Game Over: script (2/2)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 9.2</span><h2>Game Over: script (2/2)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>ui/game_over/game_over.gd</span><button class="copy" data-copy="48">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">_on_show_delay_timeout</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> text := <span class="s">&quot;Você sobreviveu %.1f s\nRecorde: %.1f s&quot;</span>
+	result_label.text = text % [<span class="t">GameManager</span>.time_survived, <span class="t">GameManager</span>.best_time]
+	<span class="f">show</span>()
+	restart_button.<span class="f">grab_focus</span>()
+
+
+<span class="k">func</span> <span class="f">_on_restart_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">go_to_game</span>()
+
+
+<span class="k">func</span> <span class="f">_on_menu_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">go_to_menu</span>()</code></pre></div></div></section>
+<section class="slide content " data-title="Menu inicial"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 10.1</span><h2>Menu inicial</h2></header><div class="body wide-img"><div class="text"><ol><li>Nova cena <b>Interface de Usuário</b> (Control) → <b>MainMenu</b>. Salve em <code class="path">ui/main_menu/main_menu.tscn</code></li><li><b>CenterContainer</b> (Full Rect) → <b>VBoxContainer</b> → <b>TitleLabel</b> ("ASTRODASH", tamanho 48), <b>BestLabel</b> (%), <b>PlayButton</b> (%) e <b>QuitButton</b>.</li><li>Conecte o <code>pressed</code> dos dois botões ao MainMenu.</li><li>Botão direito em <code>main_menu.tscn</code> → <b>Definir como Cena Principal</b>.</li></ol><div class="callout native"><b>Ferramenta nativa</b> Use <b>Theme Overrides → Font Sizes</b> no Inspetor para aumentar só o título.</div></div><div class="media n1"><figure class=""><img src="img/b14_main_menu_view.png" style="" alt="Menu inicial"></figure></div></div></section>
+<section class="slide code " data-title="Menu: script"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 10.2</span><h2>Menu: script</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>ui/main_menu/main_menu.gd</span><button class="copy" data-copy="50">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">Control</span>
+
+
+<span class="a">@onready</span> <span class="k">var</span> best_label: <span class="t">Label</span> = <span class="n">%BestLabel</span>
+<span class="a">@onready</span> <span class="k">var</span> play_button: <span class="t">Button</span> = <span class="n">%PlayButton</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	best_label.text = <span class="s">&quot;Recorde: %.1f s&quot;</span> % <span class="t">GameManager</span>.best_time
+	play_button.<span class="f">grab_focus</span>()
+
+
+<span class="k">func</span> <span class="f">_on_play_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">go_to_game</span>()
+
+
+<span class="k">func</span> <span class="f">_on_quit_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="f">get_tree</span>().<span class="f">quit</span>()</code></pre></div></div></section>
+<section class="slide content " data-title="Dificuldade com uma Curve"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 11.1</span><h2>Dificuldade com uma Curve</h2></header><div class="body split"><div class="text"><ul><li>Com o tempo, os asteroides nascem <b>mais rápido</b> e voam <b>mais rápido</b>.</li><li>Em vez de fórmulas, usamos um recurso <b>Curve</b> exportado: você <b>desenha</b> a curva de dificuldade no Inspetor.</li><li>Eixo X = progresso do tempo (0 → 1 em <b>Time To Max Difficulty</b> segundos). Eixo Y = dificuldade (0 → 1).</li><li>Parte dos asteroides (<b>Aim At Player Chance</b>) mira na nave, usando o grupo <code>player</code>: ficar parado num canto não salva ninguém.</li><li>O grupo <b>Dificuldade</b> no Inspetor vem do <code>@export_group</code>.</li></ul><div class="callout native"><b>Ferramenta nativa</b> Clique na curva no Inspetor para editar: arraste os pontos, clique com o direito para adicionar. Teste curvas diferentes!</div></div><div class="media n1"><figure class="tall"><img src="img/b15_spawner_difficulty_side.png" style="height:690px" alt="Dificuldade com uma Curve"></figure></div></div></section>
+<section class="slide code " data-title="Spawner: script final (1/3)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 11.2</span><h2>Spawner: script final (1/3)</h2></header><div class="code-wrap"><div class="note">Selecione o AsteroidSpawner → <b>Difficulty Curve</b> → <b>Novo Curve</b> → desenhe uma curva que sobe rápido no começo e suaviza no fim.</div><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="52">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">AsteroidSpawner</span>
+<span class="k">extends</span> <span class="t">Node2D</span>
+<span class="c">## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.</span>
+<span class="c">## A dificuldade sobe com o tempo seguindo a curva do Inspector.</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> asteroid_scene: <span class="t">PackedScene</span>
+<span class="c">## Chance (0 a 1) de um asteroide vir mirando direto no player.</span>
+<span class="a">@export_range</span>(<span class="d">0.0</span>, <span class="d">1.0</span>) <span class="k">var</span> aim_at_player_chance: <span class="t">float</span> = <span class="d">0.3</span>
+
+<span class="a">@export_group</span>(<span class="s">&quot;Dificuldade&quot;</span>)
+<span class="c">## Tempo (em segundos) até chegar na dificuldade máxima.</span>
+<span class="a">@export</span> <span class="k">var</span> time_to_max_difficulty: <span class="t">float</span> = <span class="d">90.0</span>
+<span class="c">## X = progresso do tempo (0 a 1), Y = dificuldade (0 a 1).</span>
+<span class="a">@export</span> <span class="k">var</span> difficulty_curve: <span class="t">Curve</span>
+<span class="a">@export</span> <span class="k">var</span> start_interval: <span class="t">float</span> = <span class="d">1.0</span>
+<span class="a">@export</span> <span class="k">var</span> end_interval: <span class="t">float</span> = <span class="d">0.2</span>
+<span class="a">@export</span> <span class="k">var</span> start_speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span>
+<span class="a">@export</span> <span class="k">var</span> end_speed_multiplier: <span class="t">float</span> = <span class="d">2.5</span>
+
+<span class="k">var</span> speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span></code></pre></div></div></section>
+<section class="slide code " data-title="Spawner: script final (2/3)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 11.2</span><h2>Spawner: script final (2/3)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="53">Copiar</button></div><pre><code><span class="a">@onready</span> <span class="k">var</span> spawn_point: <span class="t">PathFollow2D</span> = <span class="n">$SpawnPath</span>/SpawnPoint
+<span class="a">@onready</span> <span class="k">var</span> spawn_timer: <span class="t">Timer</span> = <span class="n">$SpawnTimer</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.game_over.<span class="f">connect</span>(spawn_timer.stop)
+
+
+<span class="k">func</span> <span class="f">_on_spawn_timer_timeout</span>() -&gt; <span class="t">void</span>:
+	<span class="f">_update_difficulty</span>()
+
+	spawn_point.progress_ratio = <span class="f">randf</span>()
+	<span class="k">var</span> asteroid: <span class="t">Asteroid</span> = asteroid_scene.<span class="f">instantiate</span>()
+	<span class="f">add_child</span>(asteroid)
+	asteroid.global_position = spawn_point.global_position
+
+	<span class="k">var</span> target := <span class="f">_pick_target</span>()
+	asteroid.<span class="f">launch</span>(asteroid.global_position.<span class="f">direction_to</span>(target), speed_multiplier)</code></pre></div></div></section>
+<section class="slide code " data-title="Spawner: script final (3/3)"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 11.2</span><h2>Spawner: script final (3/3)</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="54">Copiar</button></div><pre><code><span class="k">func</span> <span class="f">_update_difficulty</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> progress := <span class="f">clampf</span>(<span class="t">GameManager</span>.time_survived / time_to_max_difficulty, <span class="d">0.0</span>, <span class="d">1.0</span>)
+	<span class="k">var</span> difficulty := difficulty_curve.<span class="f">sample</span>(progress) <span class="k">if</span> difficulty_curve <span class="k">else</span> progress
+	spawn_timer.wait_time = <span class="f">lerpf</span>(start_interval, end_interval, difficulty)
+	speed_multiplier = <span class="f">lerpf</span>(start_speed_multiplier, end_speed_multiplier, difficulty)
+
+
+<span class="c">## Escolhe para onde o asteroide vai: às vezes no player, senão um ponto qualquer da tela.</span>
+<span class="k">func</span> <span class="f">_pick_target</span>() -&gt; <span class="t">Vector2</span>:
+	<span class="k">var</span> player := <span class="f">get_tree</span>().<span class="f">get_first_node_in_group</span>(<span class="s">&quot;player&quot;</span>) <span class="k">as</span> <span class="t">Node2D</span>
+	<span class="k">if</span> player <span class="k">and</span> <span class="f">randf</span>() &lt; aim_at_player_chance:
+		<span class="k">return</span> player.global_position
+	<span class="k">var</span> screen := <span class="f">get_viewport_rect</span>().size
+	<span class="k">return</span> <span class="t">Vector2</span>(<span class="f">randf_range</span>(<span class="d">0</span>, screen.x), <span class="f">randf_range</span>(<span class="d">0</span>, screen.y))</code></pre></div></div></section>
+<section class="slide content " data-title="Fundo animado com Parallax2D"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 12.1</span><h2>Fundo animado com Parallax2D</h2></header><div class="body wide-img"><div class="text"><ol><li>Nova cena com raiz <b>Parallax2D</b> → <b>Background</b>. Salve em <code class="path">levels/background/background.tscn</code></li><li>Parallax2D: <b>Repeat Size</b> = (640, 360), <b>Autoscroll</b> = (-20, 0).</li><li>Filho <b>Sprite2D</b>: Texture = icon.svg, <b>Centered</b> desligado, <b>Region → Enabled</b> e Rect = (0, 0, 640, 360).</li><li><b>CanvasItem → Texture → Repeat</b> = <code>Enabled</code> (o ícone se repete). <b>Modulate</b> alpha ≈ 30.</li><li>Instancie o Background como <b>primeiro</b> filho do Game e do MainMenu.</li></ol><div class="callout native"><b>Ferramenta nativa</b> O <b>Parallax2D</b> faz o fundo andar e se repetir infinitamente, sem uma linha de código. Na 2ª parte é só trocar a textura por um fundo de estrelas 640×360.</div></div><div class="media n2"><figure class=""><img src="img/b16_background_view.png" style="" alt="Fundo animado com Parallax2D"></figure><figure class="tall"><img src="img/b17_background_sprite_side.png" style="height:690px" alt="Fundo animado com Parallax2D"></figure></div></div></section>
+<section class="slide content " data-title="Tema global da interface"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 12.2</span><h2>Tema global da interface</h2></header><div class="body wide-img"><div class="text"><ol><li>Arquivos → botão direito em <code>ui/</code> → <b>Novo → Recurso</b> → <b>Theme</b> → salve <code class="path">ui/theme.tres</code></li><li>No Inspetor do tema: <b>Default Font Size</b> = 16.</li><li>Configurações do Projeto → busque <code>theme/custom</code> → <b>GUI → Tema → Personalizado</b> = <code>res://ui/theme.tres</code>.</li></ol><div class="callout why"><b>Por quê?</b> Na 2ª parte, colocar uma fonte pixel art no tema muda <b>todos</b> os textos do jogo de uma vez.</div></div><div class="media n1"><figure class=""><img src="img/b02_ps_theme.png" style="" alt="Tema global da interface"></figure></div></div></section>
+<section class="slide content " data-title="A cena Game completa"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 12.3</span><h2>A cena Game completa</h2></header><div class="body wide-img"><div class="text"><table><thead><tr><th>Nó</th><th>O que faz</th></tr></thead><tbody><tr><td>Background</td><td>Fundo animado (Parallax2D)</td></tr><tr><td>Walls</td><td>Prende a nave dentro da tela</td></tr><tr><td>AsteroidSpawner</td><td>Cria asteroides e controla a dificuldade</td></tr><tr><td>Player</td><td>A nave, com seus componentes</td></tr><tr><td>HUD</td><td>Tempo e recorde</td></tr><tr><td>GameOver</td><td>Aparece quando o player morre</td></tr></tbody></table><div class="callout tip"><b>Dica</b> A ordem na árvore é a ordem de desenho: de cima (atrás) para baixo (na frente).</div></div><div class="media n1"><figure class=""><img src="img/b18_game_final_view.png" style="" alt="A cena Game completa"></figure></div></div></section>
+<section class="slide content " data-title="Jogo pronto!"><header><span class="crumb">Aula 2</span><span class="chip">Etapa 12.4</span><h2>Jogo pronto!</h2></header><div class="body wide-img"><div class="text"><ul><li>Menu → Jogar → sobreviver → explosão → Game Over → jogar de novo.</li><li>O recorde fica salvo em <code>user://save.cfg</code> pelo <b>ConfigFile</b>, então continua lá ao fechar o jogo.</li></ul></div><div class="media n2 row"><figure class=""><img src="img/run_menu.png" style="" alt="Menu"><figcaption>Menu</figcaption></figure><figure class=""><img src="img/run_game_over.png" style="" alt="Game Over"><figcaption>Game Over</figcaption></figure></div></div></section>
+<section class="slide section " data-title="Preparando para a arte"><div class="section-wrap"><p class="kicker">Preparando para a arte</p><h1>2ª parte do curso: LibreSprite</h1><ol class="steps"><li><span>1</span>Onde cada arte entra</li><li><span>2</span>Tamanhos</li><li><span>3</span>Como trocar</li></ol></div></section>
+<section class="slide content " data-title="Onde cada arte entra"><header><span class="crumb">Arte</span><span class="chip">Etapa 13.1</span><h2>Onde cada arte entra</h2></header><div class="body full"><div class="text"><table><thead><tr><th>Arte</th><th>Tamanho sugerido</th><th>Onde trocar</th></tr></thead><tbody><tr><td>Nave</td><td>32×32 (apontando para a <b>direita</b>)</td><td><code class="path">entities/player/player.tscn</code> → Sprite2D → Texture</td></tr><tr><td>Asteroide</td><td>32×32 (pode fazer 2-3 variações)</td><td><code class="path">entities/asteroid/asteroid.tscn</code> → Sprite2D → Texture</td></tr><tr><td>Fundo</td><td>640×360 (bordas que se encaixam)</td><td><code class="path">levels/background/background.tscn</code> → Sprite2D → Texture</td></tr><tr><td>Partícula</td><td>4×4 ou 8×8</td><td>Player → DeathParticles → Texture</td></tr><tr><td>Fonte</td><td>Fonte pixel (.ttf)</td><td><code class="path">ui/theme.tres</code> → Default Font</td></tr></tbody></table><div class="callout tip"><b>Dica</b> Salve os PNGs exportados do LibreSprite em <code>assets/sprites/</code> e <code>assets/backgrounds/</code>. O filtro <b>Nearest</b> já está ligado no projeto todo.</div></div></div></section>
+<section class="slide content " data-title="Como trocar uma arte"><header><span class="crumb">Arte</span><span class="chip">Etapa 13.2</span><h2>Como trocar uma arte</h2></header><div class="body split"><div class="text"><ol><li>No LibreSprite: <b>Arquivo → Exportar</b> → PNG na pasta <code>assets/sprites/</code> do projeto.</li><li>Volte ao Godot: o arquivo aparece sozinho nos Arquivos.</li><li>Abra a cena (ex.: player.tscn) → selecione o <b>Sprite2D</b>.</li><li>Arraste o PNG para <b>Texture</b>.</li><li>Volte o <b>Scale</b> para <code>(1, 1)</code> (o 0.25 era só para o ícone de 128px).</li><li>Se a arte tiver outro tamanho, ajuste o raio do <b>CollisionShape2D</b>.</li></ol><div class="callout why"><b>Por quê?</b> Como o asteroide é uma cena só, trocar a arte dele muda <b>todos</b> os asteroides do jogo. Essa é a vantagem de separar em cenas.</div></div><div class="media n1"><figure class="tall"><img src="img/a11_player_sprite_side.png" style="height:690px" alt="Como trocar uma arte"></figure></div></div></section>
+<section class="slide content " data-title="Desafios para quem terminar antes"><header><span class="crumb">Arte</span><h2>Desafios para quem terminar antes</h2></header><div class="body full"><div class="text"><ol><li><b>3 vidas</b>: <code>max_health = 3</code> + mostrar corações no HUD usando o sinal <code>health_changed</code>.</li><li><b>Invencibilidade</b> por 1 segundo depois de levar dano (Timer + piscar com <b>AnimationPlayer</b>).</li><li><b>Asteroides de tamanhos diferentes</b>: crie <b>Cenas Herdadas</b> de asteroid.tscn com outro sprite e colisão.</li><li><b>Power-up de escudo</b>: um Area2D que chama <code>heal()</code> no HealthComponent.</li><li><b>Som</b>: <b>AudioStreamPlayer</b> para a explosão e música no menu.</li><li><b>Tremer a tela</b>: uma <b>Camera2D</b> com offset aleatório quando o player morre.</li></ol></div></div></section>
+<section class="slide end " data-title="end"><div class="title-wrap"><div class="logo-ship"><img src="img/icon.svg" alt=""></div><h1>Bom jogo!</h1><p class="sub">Próximo passo: abrir o LibreSprite e dar cara própria ao AstroDash.</p><p class="meta">Todos os códigos estão nos slides seguintes (Apêndice) e no repositório.</p></div></section>
+<section class="slide appendix " data-title="Apêndice: entities/player/player.gd"><header><span class="crumb">Apêndice · Aula 1</span><h2>entities/player/player.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>entities/player/player.gd</span><button class="copy" data-copy="64">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">Player</span>
+<span class="k">extends</span> <span class="t">CharacterBody2D</span>
+
+
+<span class="c">## Velocidade máxima da nave (pixels por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> speed: <span class="t">float</span> = <span class="d">180.0</span>
+<span class="c">## Quão rápido a nave acelera e freia.</span>
+<span class="a">@export</span> <span class="k">var</span> acceleration: <span class="t">float</span> = <span class="d">900.0</span>
+<span class="c">## Quão rápido a nave gira para a direção do movimento.</span>
+<span class="a">@export</span> <span class="k">var</span> rotation_speed: <span class="t">float</span> = <span class="d">10.0</span>
+
+
+<span class="k">func</span> <span class="f">_physics_process</span>(delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	<span class="k">var</span> direction := <span class="t">Input</span>.<span class="f">get_vector</span>(<span class="s">&quot;move_left&quot;</span>, <span class="s">&quot;move_right&quot;</span>, <span class="s">&quot;move_up&quot;</span>, <span class="s">&quot;move_down&quot;</span>)
+	velocity = velocity.<span class="f">move_toward</span>(direction * speed, acceleration * delta)
+	<span class="f">move_and_slide</span>()
+
+	<span class="k">if</span> direction != <span class="t">Vector2</span>.ZERO:
+		rotation = <span class="f">lerp_angle</span>(rotation, direction.<span class="f">angle</span>(), rotation_speed * delta)</code></pre></div></div></section>
+<section class="slide appendix " data-title="Apêndice: entities/asteroid/asteroid.gd"><header><span class="crumb">Apêndice · Aula 1</span><h2>entities/asteroid/asteroid.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>entities/asteroid/asteroid.gd</span><button class="copy" data-copy="65">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">Asteroid</span>
+<span class="k">extends</span> <span class="t">RigidBody2D</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> min_speed: <span class="t">float</span> = <span class="d">60.0</span>
+<span class="a">@export</span> <span class="k">var</span> max_speed: <span class="t">float</span> = <span class="d">120.0</span>
+<span class="c">## Velocidade máxima de giro (radianos por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> max_spin: <span class="t">float</span> = <span class="d">3.0</span>
+
+
+<span class="c">## Lança o asteroide em uma direção. Quem chama é o AsteroidSpawner.</span>
+<span class="k">func</span> <span class="f">launch</span>(direction: <span class="t">Vector2</span>, speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span>) -&gt; <span class="t">void</span>:
+	linear_velocity = direction * <span class="f">randf_range</span>(min_speed, max_speed) * speed_multiplier
+	angular_velocity = <span class="f">randf_range</span>(-max_spin, max_spin)</code></pre></div></div></section>
+<section class="slide appendix " data-title="Apêndice: systems/asteroid_spawner/asteroid_spawner.gd"><header><span class="crumb">Apêndice · Aula 1</span><h2>systems/asteroid_spawner/asteroid_spawner.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="66">Copiar</button></div><div class="cols"><pre><code><span class="k">class_name</span> <span class="t">AsteroidSpawner</span>
+<span class="k">extends</span> <span class="t">Node2D</span>
+<span class="c">## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> asteroid_scene: <span class="t">PackedScene</span>
+
+<span class="a">@onready</span> <span class="k">var</span> spawn_point: <span class="t">PathFollow2D</span> = <span class="n">$SpawnPath</span>/SpawnPoint</code></pre><pre><code><span class="k">func</span> <span class="f">_on_spawn_timer_timeout</span>() -&gt; <span class="t">void</span>:
+	spawn_point.progress_ratio = <span class="f">randf</span>()
+	<span class="k">var</span> asteroid: <span class="t">Asteroid</span> = asteroid_scene.<span class="f">instantiate</span>()
+	<span class="f">add_child</span>(asteroid)
+	asteroid.global_position = spawn_point.global_position
+
+	<span class="k">var</span> target := <span class="f">_pick_target</span>()
+	asteroid.<span class="f">launch</span>(asteroid.global_position.<span class="f">direction_to</span>(target))
+
+
+<span class="c">## Escolhe um ponto qualquer da tela para o asteroide atravessar.</span>
+<span class="k">func</span> <span class="f">_pick_target</span>() -&gt; <span class="t">Vector2</span>:
+	<span class="k">var</span> screen := <span class="f">get_viewport_rect</span>().size
+	<span class="k">return</span> <span class="t">Vector2</span>(<span class="f">randf_range</span>(<span class="d">0</span>, screen.x), <span class="f">randf_range</span>(<span class="d">0</span>, screen.y))</code></pre></div></div></div></section>
+<section class="slide appendix " data-title="Apêndice: autoload/game_manager.gd"><header><span class="crumb">Apêndice · Final</span><h2>autoload/game_manager.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>autoload/game_manager.gd</span><button class="copy" data-copy="67">Copiar</button></div><div class="cols"><pre><code><span class="k">extends</span> <span class="t">Node</span>
+<span class="c">## GameManager (Autoload): guarda o estado da partida e o recorde.</span>
+<span class="c">## Qualquer script do jogo pode acessar com GameManager.alguma_coisa</span>
+
+
+<span class="c">## Avisa que uma partida nova começou.</span>
+<span class="k">signal</span> game_started
+<span class="c">## Avisa que o jogador morreu e a partida acabou.</span>
+<span class="k">signal</span> game_over
+
+<span class="k">const</span> GAME_SCENE := <span class="s">&quot;res://levels/game/game.tscn&quot;</span>
+<span class="k">const</span> MENU_SCENE := <span class="s">&quot;res://ui/main_menu/main_menu.tscn&quot;</span>
+<span class="k">const</span> SAVE_PATH := <span class="s">&quot;user://save.cfg&quot;</span>
+
+<span class="k">var</span> time_survived: <span class="t">float</span> = <span class="d">0.0</span>
+<span class="k">var</span> best_time: <span class="t">float</span> = <span class="d">0.0</span>
+<span class="k">var</span> is_playing: <span class="t">bool</span> = <span class="k">false</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="f">load_best_time</span>()
+
+
+<span class="k">func</span> <span class="f">_process</span>(delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	<span class="k">if</span> is_playing:
+		time_survived += delta
+
+
+<span class="k">func</span> <span class="f">start_game</span>() -&gt; <span class="t">void</span>:
+	time_survived = <span class="d">0.0</span>
+	is_playing = <span class="k">true</span>
+	game_started.<span class="f">emit</span>()</code></pre><pre><code><span class="k">func</span> <span class="f">end_game</span>() -&gt; <span class="t">void</span>:
+	<span class="k">if</span> <span class="k">not</span> is_playing:
+		<span class="k">return</span>
+	is_playing = <span class="k">false</span>
+	<span class="k">if</span> time_survived &gt; best_time:
+		best_time = time_survived
+		<span class="f">save_best_time</span>()
+	game_over.<span class="f">emit</span>()
+
+
+<span class="k">func</span> <span class="f">go_to_game</span>() -&gt; <span class="t">void</span>:
+	<span class="f">get_tree</span>().<span class="f">change_scene_to_file</span>(GAME_SCENE)
+
+
+<span class="k">func</span> <span class="f">go_to_menu</span>() -&gt; <span class="t">void</span>:
+	is_playing = <span class="k">false</span>
+	<span class="f">get_tree</span>().<span class="f">change_scene_to_file</span>(MENU_SCENE)
+
+
+<span class="k">func</span> <span class="f">save_best_time</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> config := <span class="t">ConfigFile</span>.<span class="f">new</span>()
+	config.<span class="f">set_value</span>(<span class="s">&quot;score&quot;</span>, <span class="s">&quot;best_time&quot;</span>, best_time)
+	config.<span class="f">save</span>(SAVE_PATH)
+
+
+<span class="k">func</span> <span class="f">load_best_time</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> config := <span class="t">ConfigFile</span>.<span class="f">new</span>()
+	<span class="k">if</span> config.<span class="f">load</span>(SAVE_PATH) == <span class="t">OK</span>:
+		best_time = config.<span class="f">get_value</span>(<span class="s">&quot;score&quot;</span>, <span class="s">&quot;best_time&quot;</span>, <span class="d">0.0</span>)</code></pre></div></div></div></section>
+<section class="slide appendix " data-title="Apêndice: components/health_component.gd"><header><span class="crumb">Apêndice · Final</span><h2>components/health_component.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>components/health_component.gd</span><button class="copy" data-copy="68">Copiar</button></div><div class="cols"><pre><code><span class="k">class_name</span> <span class="t">HealthComponent</span>
+<span class="k">extends</span> <span class="t">Node</span>
+<span class="c">## Componente de vida: guarda a vida de quem for &quot;dono&quot; dele e avisa quando morrer.</span>
+<span class="c">## Pode ser usado no player, em inimigos, em chefões...</span>
+
+
+<span class="c">## Emitido sempre que a vida muda (útil para barras de vida e corações).</span>
+<span class="k">signal</span> <span class="f">health_changed</span>(current: <span class="t">int</span>, maximum: <span class="t">int</span>)
+<span class="c">## Emitido quando a vida chega a zero.</span>
+<span class="k">signal</span> died
+
+<span class="a">@export</span> <span class="k">var</span> max_health: <span class="t">int</span> = <span class="d">1</span>
+
+<span class="k">var</span> current_health: <span class="t">int</span></code></pre><pre><code><span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	current_health = max_health
+
+
+<span class="k">func</span> <span class="f">take_damage</span>(amount: <span class="t">int</span>) -&gt; <span class="t">void</span>:
+	<span class="k">if</span> current_health &lt;= <span class="d">0</span>:
+		<span class="k">return</span>
+	current_health = <span class="f">maxi</span>(current_health - amount, <span class="d">0</span>)
+	health_changed.<span class="f">emit</span>(current_health, max_health)
+	<span class="k">if</span> current_health == <span class="d">0</span>:
+		died.<span class="f">emit</span>()
+
+
+<span class="k">func</span> <span class="f">heal</span>(amount: <span class="t">int</span>) -&gt; <span class="t">void</span>:
+	current_health = <span class="f">mini</span>(current_health + amount, max_health)
+	health_changed.<span class="f">emit</span>(current_health, max_health)</code></pre></div></div></div></section>
+<section class="slide appendix " data-title="Apêndice: components/hurtbox_component.gd"><header><span class="crumb">Apêndice · Final</span><h2>components/hurtbox_component.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>components/hurtbox_component.gd</span><button class="copy" data-copy="69">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">HurtboxComponent</span>
+<span class="k">extends</span> <span class="t">Area2D</span>
+<span class="c">## Componente &quot;área de dano&quot;: quando um corpo perigoso encosta nele,</span>
+<span class="c">## tira vida do HealthComponent ligado no Inspector.</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> health_component: <span class="t">HealthComponent</span>
+<span class="a">@export</span> <span class="k">var</span> damage_per_hit: <span class="t">int</span> = <span class="d">1</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	body_entered.<span class="f">connect</span>(_on_body_entered)
+
+
+<span class="k">func</span> <span class="f">_on_body_entered</span>(_body: <span class="t">Node2D</span>) -&gt; <span class="t">void</span>:
+	health_component.<span class="f">take_damage</span>(damage_per_hit)</code></pre></div></div></section>
+<section class="slide appendix " data-title="Apêndice: entities/player/player.gd"><header><span class="crumb">Apêndice · Final</span><h2>entities/player/player.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>entities/player/player.gd</span><button class="copy" data-copy="70">Copiar</button></div><div class="cols"><pre><code><span class="k">class_name</span> <span class="t">Player</span>
+<span class="k">extends</span> <span class="t">CharacterBody2D</span>
+
+
+<span class="c">## Velocidade máxima da nave (pixels por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> speed: <span class="t">float</span> = <span class="d">180.0</span>
+<span class="c">## Quão rápido a nave acelera e freia.</span>
+<span class="a">@export</span> <span class="k">var</span> acceleration: <span class="t">float</span> = <span class="d">900.0</span>
+<span class="c">## Quão rápido a nave gira para a direção do movimento.</span>
+<span class="a">@export</span> <span class="k">var</span> rotation_speed: <span class="t">float</span> = <span class="d">10.0</span>
+
+<span class="a">@onready</span> <span class="k">var</span> sprite: <span class="t">Sprite2D</span> = <span class="n">$<span class="t">Sprite2D</span></span>
+<span class="a">@onready</span> <span class="k">var</span> death_particles: <span class="t">CPUParticles2D</span> = <span class="n">$DeathParticles</span></code></pre><pre><code><span class="k">func</span> <span class="f">_physics_process</span>(delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	<span class="k">var</span> direction := <span class="t">Input</span>.<span class="f">get_vector</span>(<span class="s">&quot;move_left&quot;</span>, <span class="s">&quot;move_right&quot;</span>, <span class="s">&quot;move_up&quot;</span>, <span class="s">&quot;move_down&quot;</span>)
+	velocity = velocity.<span class="f">move_toward</span>(direction * speed, acceleration * delta)
+	<span class="f">move_and_slide</span>()
+
+	<span class="k">if</span> direction != <span class="t">Vector2</span>.ZERO:
+		rotation = <span class="f">lerp_angle</span>(rotation, direction.<span class="f">angle</span>(), rotation_speed * delta)
+
+
+<span class="k">func</span> <span class="f">_on_health_component_died</span>() -&gt; <span class="t">void</span>:
+	<span class="f">set_physics_process</span>(<span class="k">false</span>)
+	sprite.<span class="f">hide</span>()
+	death_particles.emitting = <span class="k">true</span>
+	<span class="t">GameManager</span>.<span class="f">end_game</span>()</code></pre></div></div></div></section>
+<section class="slide appendix " data-title="Apêndice: entities/asteroid/asteroid.gd"><header><span class="crumb">Apêndice · Final</span><h2>entities/asteroid/asteroid.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>entities/asteroid/asteroid.gd</span><button class="copy" data-copy="71">Copiar</button></div><pre><code><span class="k">class_name</span> <span class="t">Asteroid</span>
+<span class="k">extends</span> <span class="t">RigidBody2D</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> min_speed: <span class="t">float</span> = <span class="d">60.0</span>
+<span class="a">@export</span> <span class="k">var</span> max_speed: <span class="t">float</span> = <span class="d">120.0</span>
+<span class="c">## Velocidade máxima de giro (radianos por segundo).</span>
+<span class="a">@export</span> <span class="k">var</span> max_spin: <span class="t">float</span> = <span class="d">3.0</span>
+
+
+<span class="c">## Lança o asteroide em uma direção. Quem chama é o AsteroidSpawner.</span>
+<span class="k">func</span> <span class="f">launch</span>(direction: <span class="t">Vector2</span>, speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span>) -&gt; <span class="t">void</span>:
+	linear_velocity = direction * <span class="f">randf_range</span>(min_speed, max_speed) * speed_multiplier
+	angular_velocity = <span class="f">randf_range</span>(-max_spin, max_spin)</code></pre></div></div></section>
+<section class="slide appendix " data-title="Apêndice: systems/asteroid_spawner/asteroid_spawner.gd"><header><span class="crumb">Apêndice · Final</span><h2>systems/asteroid_spawner/asteroid_spawner.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>systems/asteroid_spawner/asteroid_spawner.gd</span><button class="copy" data-copy="72">Copiar</button></div><div class="cols"><pre><code><span class="k">class_name</span> <span class="t">AsteroidSpawner</span>
+<span class="k">extends</span> <span class="t">Node2D</span>
+<span class="c">## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.</span>
+<span class="c">## A dificuldade sobe com o tempo seguindo a curva do Inspector.</span>
+
+
+<span class="a">@export</span> <span class="k">var</span> asteroid_scene: <span class="t">PackedScene</span>
+<span class="c">## Chance (0 a 1) de um asteroide vir mirando direto no player.</span>
+<span class="a">@export_range</span>(<span class="d">0.0</span>, <span class="d">1.0</span>) <span class="k">var</span> aim_at_player_chance: <span class="t">float</span> = <span class="d">0.3</span>
+
+<span class="a">@export_group</span>(<span class="s">&quot;Dificuldade&quot;</span>)
+<span class="c">## Tempo (em segundos) até chegar na dificuldade máxima.</span>
+<span class="a">@export</span> <span class="k">var</span> time_to_max_difficulty: <span class="t">float</span> = <span class="d">90.0</span>
+<span class="c">## X = progresso do tempo (0 a 1), Y = dificuldade (0 a 1).</span>
+<span class="a">@export</span> <span class="k">var</span> difficulty_curve: <span class="t">Curve</span>
+<span class="a">@export</span> <span class="k">var</span> start_interval: <span class="t">float</span> = <span class="d">1.0</span>
+<span class="a">@export</span> <span class="k">var</span> end_interval: <span class="t">float</span> = <span class="d">0.2</span>
+<span class="a">@export</span> <span class="k">var</span> start_speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span>
+<span class="a">@export</span> <span class="k">var</span> end_speed_multiplier: <span class="t">float</span> = <span class="d">2.5</span>
+
+<span class="k">var</span> speed_multiplier: <span class="t">float</span> = <span class="d">1.0</span>
+
+<span class="a">@onready</span> <span class="k">var</span> spawn_point: <span class="t">PathFollow2D</span> = <span class="n">$SpawnPath</span>/SpawnPoint
+<span class="a">@onready</span> <span class="k">var</span> spawn_timer: <span class="t">Timer</span> = <span class="n">$SpawnTimer</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.game_over.<span class="f">connect</span>(spawn_timer.stop)</code></pre><pre><code><span class="k">func</span> <span class="f">_on_spawn_timer_timeout</span>() -&gt; <span class="t">void</span>:
+	<span class="f">_update_difficulty</span>()
+
+	spawn_point.progress_ratio = <span class="f">randf</span>()
+	<span class="k">var</span> asteroid: <span class="t">Asteroid</span> = asteroid_scene.<span class="f">instantiate</span>()
+	<span class="f">add_child</span>(asteroid)
+	asteroid.global_position = spawn_point.global_position
+
+	<span class="k">var</span> target := <span class="f">_pick_target</span>()
+	asteroid.<span class="f">launch</span>(asteroid.global_position.<span class="f">direction_to</span>(target), speed_multiplier)
+
+
+<span class="k">func</span> <span class="f">_update_difficulty</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> progress := <span class="f">clampf</span>(<span class="t">GameManager</span>.time_survived / time_to_max_difficulty, <span class="d">0.0</span>, <span class="d">1.0</span>)
+	<span class="k">var</span> difficulty := difficulty_curve.<span class="f">sample</span>(progress) <span class="k">if</span> difficulty_curve <span class="k">else</span> progress
+	spawn_timer.wait_time = <span class="f">lerpf</span>(start_interval, end_interval, difficulty)
+	speed_multiplier = <span class="f">lerpf</span>(start_speed_multiplier, end_speed_multiplier, difficulty)
+
+
+<span class="c">## Escolhe para onde o asteroide vai: às vezes no player, senão um ponto qualquer da tela.</span>
+<span class="k">func</span> <span class="f">_pick_target</span>() -&gt; <span class="t">Vector2</span>:
+	<span class="k">var</span> player := <span class="f">get_tree</span>().<span class="f">get_first_node_in_group</span>(<span class="s">&quot;player&quot;</span>) <span class="k">as</span> <span class="t">Node2D</span>
+	<span class="k">if</span> player <span class="k">and</span> <span class="f">randf</span>() &lt; aim_at_player_chance:
+		<span class="k">return</span> player.global_position
+	<span class="k">var</span> screen := <span class="f">get_viewport_rect</span>().size
+	<span class="k">return</span> <span class="t">Vector2</span>(<span class="f">randf_range</span>(<span class="d">0</span>, screen.x), <span class="f">randf_range</span>(<span class="d">0</span>, screen.y))</code></pre></div></div></div></section>
+<section class="slide appendix " data-title="Apêndice: levels/game/game.gd"><header><span class="crumb">Apêndice · Final</span><h2>levels/game/game.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>levels/game/game.gd</span><button class="copy" data-copy="73">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">Node2D</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">start_game</span>()</code></pre></div></div></section>
+<section class="slide appendix " data-title="Apêndice: ui/hud/hud.gd"><header><span class="crumb">Apêndice · Final</span><h2>ui/hud/hud.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>ui/hud/hud.gd</span><button class="copy" data-copy="74">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">CanvasLayer</span>
+
+
+<span class="a">@onready</span> <span class="k">var</span> time_label: <span class="t">Label</span> = <span class="n">%TimeLabel</span>
+<span class="a">@onready</span> <span class="k">var</span> best_label: <span class="t">Label</span> = <span class="n">%BestLabel</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	best_label.text = <span class="s">&quot;Recorde: %.1f s&quot;</span> % <span class="t">GameManager</span>.best_time
+
+
+<span class="k">func</span> <span class="f">_process</span>(_delta: <span class="t">float</span>) -&gt; <span class="t">void</span>:
+	time_label.text = <span class="s">&quot;Tempo: %.1f s&quot;</span> % <span class="t">GameManager</span>.time_survived</code></pre></div></div></section>
+<section class="slide appendix " data-title="Apêndice: ui/game_over/game_over.gd"><header><span class="crumb">Apêndice · Final</span><h2>ui/game_over/game_over.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>ui/game_over/game_over.gd</span><button class="copy" data-copy="75">Copiar</button></div><div class="cols"><pre><code><span class="k">extends</span> <span class="t">CanvasLayer</span>
+
+
+<span class="a">@onready</span> <span class="k">var</span> result_label: <span class="t">Label</span> = <span class="n">%ResultLabel</span>
+<span class="a">@onready</span> <span class="k">var</span> restart_button: <span class="t">Button</span> = <span class="n">%RestartButton</span>
+<span class="a">@onready</span> <span class="k">var</span> show_delay: <span class="t">Timer</span> = <span class="n">$ShowDelay</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	<span class="f">hide</span>()
+	<span class="t">GameManager</span>.game_over.<span class="f">connect</span>(_on_game_over)
+
+
+<span class="k">func</span> <span class="f">_on_game_over</span>() -&gt; <span class="t">void</span>:
+	<span class="c"># Espera um pouquinho para dar tempo de ver a explosão.</span>
+	show_delay.<span class="f">start</span>()</code></pre><pre><code><span class="k">func</span> <span class="f">_on_show_delay_timeout</span>() -&gt; <span class="t">void</span>:
+	<span class="k">var</span> text := <span class="s">&quot;Você sobreviveu %.1f s\nRecorde: %.1f s&quot;</span>
+	result_label.text = text % [<span class="t">GameManager</span>.time_survived, <span class="t">GameManager</span>.best_time]
+	<span class="f">show</span>()
+	restart_button.<span class="f">grab_focus</span>()
+
+
+<span class="k">func</span> <span class="f">_on_restart_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">go_to_game</span>()
+
+
+<span class="k">func</span> <span class="f">_on_menu_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">go_to_menu</span>()</code></pre></div></div></div></section>
+<section class="slide appendix " data-title="Apêndice: ui/main_menu/main_menu.gd"><header><span class="crumb">Apêndice · Final</span><h2>ui/main_menu/main_menu.gd</h2></header><div class="code-wrap"><div class="codebox"><div class="codebar"><span>ui/main_menu/main_menu.gd</span><button class="copy" data-copy="76">Copiar</button></div><pre><code><span class="k">extends</span> <span class="t">Control</span>
+
+
+<span class="a">@onready</span> <span class="k">var</span> best_label: <span class="t">Label</span> = <span class="n">%BestLabel</span>
+<span class="a">@onready</span> <span class="k">var</span> play_button: <span class="t">Button</span> = <span class="n">%PlayButton</span>
+
+
+<span class="k">func</span> <span class="f">_ready</span>() -&gt; <span class="t">void</span>:
+	best_label.text = <span class="s">&quot;Recorde: %.1f s&quot;</span> % <span class="t">GameManager</span>.best_time
+	play_button.<span class="f">grab_focus</span>()
+
+
+<span class="k">func</span> <span class="f">_on_play_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="t">GameManager</span>.<span class="f">go_to_game</span>()
+
+
+<span class="k">func</span> <span class="f">_on_quit_button_pressed</span>() -&gt; <span class="t">void</span>:
+	<span class="f">get_tree</span>().<span class="f">quit</span>()</code></pre></div></div></section>
+</div></div>
+<div id="bar"></div>
+<div id="counter"></div>
+<div id="nav"><button id="menuBtn" title="Índice (M)">☰</button><button id="prev" title="Anterior">←</button><button id="next" title="Próximo">→</button></div>
+<nav id="menu"></nav>
+<div id="zoom"><img alt=""></div>
+<script>
+const COPY = {"15": "class_name Player\nextends CharacterBody2D\n\n\n## Velocidade máxima da nave (pixels por segundo).\n@export var speed: float = 180.0\n## Quão rápido a nave acelera e freia.\n@export var acceleration: float = 900.0\n## Quão rápido a nave gira para a direção do movimento.\n@export var rotation_speed: float = 10.0\n\n\nfunc _physics_process(delta: float) -> void:\n\tvar direction := Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")\n\tvelocity = velocity.move_toward(direction * speed, acceleration * delta)\n\tmove_and_slide()\n\n\tif direction != Vector2.ZERO:\n\t\trotation = lerp_angle(rotation, direction.angle(), rotation_speed * delta)", "21": "class_name Asteroid\nextends RigidBody2D\n\n\n@export var min_speed: float = 60.0\n@export var max_speed: float = 120.0\n## Velocidade máxima de giro (radianos por segundo).\n@export var max_spin: float = 3.0\n\n\n## Lança o asteroide em uma direção. Quem chama é o AsteroidSpawner.\nfunc launch(direction: Vector2, speed_multiplier: float = 1.0) -> void:\n\tlinear_velocity = direction * randf_range(min_speed, max_speed) * speed_multiplier\n\tangular_velocity = randf_range(-max_spin, max_spin)", "24": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n\n\n@export var asteroid_scene: PackedScene\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target))\n\n\n## Escolhe um ponto qualquer da tela para o asteroide atravessar.\nfunc _pick_target() -> Vector2:\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "25": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n\n\n@export var asteroid_scene: PackedScene\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target))\n\n\n## Escolhe um ponto qualquer da tela para o asteroide atravessar.\nfunc _pick_target() -> Vector2:\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "29": "extends Node\n## GameManager (Autoload): guarda o estado da partida e o recorde.\n## Qualquer script do jogo pode acessar com GameManager.alguma_coisa\n\n\n## Avisa que uma partida nova começou.\nsignal game_started\n## Avisa que o jogador morreu e a partida acabou.\nsignal game_over\n\nconst GAME_SCENE := \"res://levels/game/game.tscn\"\nconst MENU_SCENE := \"res://ui/main_menu/main_menu.tscn\"\nconst SAVE_PATH := \"user://save.cfg\"\n\nvar time_survived: float = 0.0\nvar best_time: float = 0.0\nvar is_playing: bool = false\n\n\nfunc _ready() -> void:\n\tload_best_time()\n\n\nfunc _process(delta: float) -> void:\n\tif is_playing:\n\t\ttime_survived += delta\n\n\nfunc start_game() -> void:\n\ttime_survived = 0.0\n\tis_playing = true\n\tgame_started.emit()\n\n\nfunc end_game() -> void:\n\tif not is_playing:\n\t\treturn\n\tis_playing = false\n\tif time_survived > best_time:\n\t\tbest_time = time_survived\n\t\tsave_best_time()\n\tgame_over.emit()\n\n\nfunc go_to_game() -> void:\n\tget_tree().change_scene_to_file(GAME_SCENE)\n\n\nfunc go_to_menu() -> void:\n\tis_playing = false\n\tget_tree().change_scene_to_file(MENU_SCENE)\n\n\nfunc save_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tconfig.set_value(\"score\", \"best_time\", best_time)\n\tconfig.save(SAVE_PATH)\n\n\nfunc load_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tif config.load(SAVE_PATH) == OK:\n\t\tbest_time = config.get_value(\"score\", \"best_time\", 0.0)", "30": "extends Node\n## GameManager (Autoload): guarda o estado da partida e o recorde.\n## Qualquer script do jogo pode acessar com GameManager.alguma_coisa\n\n\n## Avisa que uma partida nova começou.\nsignal game_started\n## Avisa que o jogador morreu e a partida acabou.\nsignal game_over\n\nconst GAME_SCENE := \"res://levels/game/game.tscn\"\nconst MENU_SCENE := \"res://ui/main_menu/main_menu.tscn\"\nconst SAVE_PATH := \"user://save.cfg\"\n\nvar time_survived: float = 0.0\nvar best_time: float = 0.0\nvar is_playing: bool = false\n\n\nfunc _ready() -> void:\n\tload_best_time()\n\n\nfunc _process(delta: float) -> void:\n\tif is_playing:\n\t\ttime_survived += delta\n\n\nfunc start_game() -> void:\n\ttime_survived = 0.0\n\tis_playing = true\n\tgame_started.emit()\n\n\nfunc end_game() -> void:\n\tif not is_playing:\n\t\treturn\n\tis_playing = false\n\tif time_survived > best_time:\n\t\tbest_time = time_survived\n\t\tsave_best_time()\n\tgame_over.emit()\n\n\nfunc go_to_game() -> void:\n\tget_tree().change_scene_to_file(GAME_SCENE)\n\n\nfunc go_to_menu() -> void:\n\tis_playing = false\n\tget_tree().change_scene_to_file(MENU_SCENE)\n\n\nfunc save_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tconfig.set_value(\"score\", \"best_time\", best_time)\n\tconfig.save(SAVE_PATH)\n\n\nfunc load_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tif config.load(SAVE_PATH) == OK:\n\t\tbest_time = config.get_value(\"score\", \"best_time\", 0.0)", "31": "extends Node\n## GameManager (Autoload): guarda o estado da partida e o recorde.\n## Qualquer script do jogo pode acessar com GameManager.alguma_coisa\n\n\n## Avisa que uma partida nova começou.\nsignal game_started\n## Avisa que o jogador morreu e a partida acabou.\nsignal game_over\n\nconst GAME_SCENE := \"res://levels/game/game.tscn\"\nconst MENU_SCENE := \"res://ui/main_menu/main_menu.tscn\"\nconst SAVE_PATH := \"user://save.cfg\"\n\nvar time_survived: float = 0.0\nvar best_time: float = 0.0\nvar is_playing: bool = false\n\n\nfunc _ready() -> void:\n\tload_best_time()\n\n\nfunc _process(delta: float) -> void:\n\tif is_playing:\n\t\ttime_survived += delta\n\n\nfunc start_game() -> void:\n\ttime_survived = 0.0\n\tis_playing = true\n\tgame_started.emit()\n\n\nfunc end_game() -> void:\n\tif not is_playing:\n\t\treturn\n\tis_playing = false\n\tif time_survived > best_time:\n\t\tbest_time = time_survived\n\t\tsave_best_time()\n\tgame_over.emit()\n\n\nfunc go_to_game() -> void:\n\tget_tree().change_scene_to_file(GAME_SCENE)\n\n\nfunc go_to_menu() -> void:\n\tis_playing = false\n\tget_tree().change_scene_to_file(MENU_SCENE)\n\n\nfunc save_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tconfig.set_value(\"score\", \"best_time\", best_time)\n\tconfig.save(SAVE_PATH)\n\n\nfunc load_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tif config.load(SAVE_PATH) == OK:\n\t\tbest_time = config.get_value(\"score\", \"best_time\", 0.0)", "32": "extends Node\n## GameManager (Autoload): guarda o estado da partida e o recorde.\n## Qualquer script do jogo pode acessar com GameManager.alguma_coisa\n\n\n## Avisa que uma partida nova começou.\nsignal game_started\n## Avisa que o jogador morreu e a partida acabou.\nsignal game_over\n\nconst GAME_SCENE := \"res://levels/game/game.tscn\"\nconst MENU_SCENE := \"res://ui/main_menu/main_menu.tscn\"\nconst SAVE_PATH := \"user://save.cfg\"\n\nvar time_survived: float = 0.0\nvar best_time: float = 0.0\nvar is_playing: bool = false\n\n\nfunc _ready() -> void:\n\tload_best_time()\n\n\nfunc _process(delta: float) -> void:\n\tif is_playing:\n\t\ttime_survived += delta\n\n\nfunc start_game() -> void:\n\ttime_survived = 0.0\n\tis_playing = true\n\tgame_started.emit()\n\n\nfunc end_game() -> void:\n\tif not is_playing:\n\t\treturn\n\tis_playing = false\n\tif time_survived > best_time:\n\t\tbest_time = time_survived\n\t\tsave_best_time()\n\tgame_over.emit()\n\n\nfunc go_to_game() -> void:\n\tget_tree().change_scene_to_file(GAME_SCENE)\n\n\nfunc go_to_menu() -> void:\n\tis_playing = false\n\tget_tree().change_scene_to_file(MENU_SCENE)\n\n\nfunc save_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tconfig.set_value(\"score\", \"best_time\", best_time)\n\tconfig.save(SAVE_PATH)\n\n\nfunc load_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tif config.load(SAVE_PATH) == OK:\n\t\tbest_time = config.get_value(\"score\", \"best_time\", 0.0)", "34": "extends Node2D\n\n\nfunc _ready() -> void:\n\tGameManager.start_game()", "36": "extends CanvasLayer\n\n\n@onready var time_label: Label = %TimeLabel\n@onready var best_label: Label = %BestLabel\n\n\nfunc _ready() -> void:\n\tbest_label.text = \"Recorde: %.1f s\" % GameManager.best_time\n\n\nfunc _process(_delta: float) -> void:\n\ttime_label.text = \"Tempo: %.1f s\" % GameManager.time_survived", "38": "class_name HealthComponent\nextends Node\n## Componente de vida: guarda a vida de quem for \"dono\" dele e avisa quando morrer.\n## Pode ser usado no player, em inimigos, em chefões...\n\n\n## Emitido sempre que a vida muda (útil para barras de vida e corações).\nsignal health_changed(current: int, maximum: int)\n## Emitido quando a vida chega a zero.\nsignal died\n\n@export var max_health: int = 1\n\nvar current_health: int\n\n\nfunc _ready() -> void:\n\tcurrent_health = max_health\n\n\nfunc take_damage(amount: int) -> void:\n\tif current_health <= 0:\n\t\treturn\n\tcurrent_health = maxi(current_health - amount, 0)\n\thealth_changed.emit(current_health, max_health)\n\tif current_health == 0:\n\t\tdied.emit()\n\n\nfunc heal(amount: int) -> void:\n\tcurrent_health = mini(current_health + amount, max_health)\n\thealth_changed.emit(current_health, max_health)", "39": "class_name HealthComponent\nextends Node\n## Componente de vida: guarda a vida de quem for \"dono\" dele e avisa quando morrer.\n## Pode ser usado no player, em inimigos, em chefões...\n\n\n## Emitido sempre que a vida muda (útil para barras de vida e corações).\nsignal health_changed(current: int, maximum: int)\n## Emitido quando a vida chega a zero.\nsignal died\n\n@export var max_health: int = 1\n\nvar current_health: int\n\n\nfunc _ready() -> void:\n\tcurrent_health = max_health\n\n\nfunc take_damage(amount: int) -> void:\n\tif current_health <= 0:\n\t\treturn\n\tcurrent_health = maxi(current_health - amount, 0)\n\thealth_changed.emit(current_health, max_health)\n\tif current_health == 0:\n\t\tdied.emit()\n\n\nfunc heal(amount: int) -> void:\n\tcurrent_health = mini(current_health + amount, max_health)\n\thealth_changed.emit(current_health, max_health)", "40": "class_name HurtboxComponent\nextends Area2D\n## Componente \"área de dano\": quando um corpo perigoso encosta nele,\n## tira vida do HealthComponent ligado no Inspector.\n\n\n@export var health_component: HealthComponent\n@export var damage_per_hit: int = 1\n\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\n\nfunc _on_body_entered(_body: Node2D) -> void:\n\thealth_component.take_damage(damage_per_hit)", "44": "class_name Player\nextends CharacterBody2D\n\n\n## Velocidade máxima da nave (pixels por segundo).\n@export var speed: float = 180.0\n## Quão rápido a nave acelera e freia.\n@export var acceleration: float = 900.0\n## Quão rápido a nave gira para a direção do movimento.\n@export var rotation_speed: float = 10.0\n\n@onready var sprite: Sprite2D = $Sprite2D\n@onready var death_particles: CPUParticles2D = $DeathParticles\n\n\nfunc _physics_process(delta: float) -> void:\n\tvar direction := Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")\n\tvelocity = velocity.move_toward(direction * speed, acceleration * delta)\n\tmove_and_slide()\n\n\tif direction != Vector2.ZERO:\n\t\trotation = lerp_angle(rotation, direction.angle(), rotation_speed * delta)\n\n\nfunc _on_health_component_died() -> void:\n\tset_physics_process(false)\n\tsprite.hide()\n\tdeath_particles.emitting = true\n\tGameManager.end_game()", "45": "class_name Player\nextends CharacterBody2D\n\n\n## Velocidade máxima da nave (pixels por segundo).\n@export var speed: float = 180.0\n## Quão rápido a nave acelera e freia.\n@export var acceleration: float = 900.0\n## Quão rápido a nave gira para a direção do movimento.\n@export var rotation_speed: float = 10.0\n\n@onready var sprite: Sprite2D = $Sprite2D\n@onready var death_particles: CPUParticles2D = $DeathParticles\n\n\nfunc _physics_process(delta: float) -> void:\n\tvar direction := Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")\n\tvelocity = velocity.move_toward(direction * speed, acceleration * delta)\n\tmove_and_slide()\n\n\tif direction != Vector2.ZERO:\n\t\trotation = lerp_angle(rotation, direction.angle(), rotation_speed * delta)\n\n\nfunc _on_health_component_died() -> void:\n\tset_physics_process(false)\n\tsprite.hide()\n\tdeath_particles.emitting = true\n\tGameManager.end_game()", "47": "extends CanvasLayer\n\n\n@onready var result_label: Label = %ResultLabel\n@onready var restart_button: Button = %RestartButton\n@onready var show_delay: Timer = $ShowDelay\n\n\nfunc _ready() -> void:\n\thide()\n\tGameManager.game_over.connect(_on_game_over)\n\n\nfunc _on_game_over() -> void:\n\t# Espera um pouquinho para dar tempo de ver a explosão.\n\tshow_delay.start()\n\n\nfunc _on_show_delay_timeout() -> void:\n\tvar text := \"Você sobreviveu %.1f s\\nRecorde: %.1f s\"\n\tresult_label.text = text % [GameManager.time_survived, GameManager.best_time]\n\tshow()\n\trestart_button.grab_focus()\n\n\nfunc _on_restart_button_pressed() -> void:\n\tGameManager.go_to_game()\n\n\nfunc _on_menu_button_pressed() -> void:\n\tGameManager.go_to_menu()", "48": "extends CanvasLayer\n\n\n@onready var result_label: Label = %ResultLabel\n@onready var restart_button: Button = %RestartButton\n@onready var show_delay: Timer = $ShowDelay\n\n\nfunc _ready() -> void:\n\thide()\n\tGameManager.game_over.connect(_on_game_over)\n\n\nfunc _on_game_over() -> void:\n\t# Espera um pouquinho para dar tempo de ver a explosão.\n\tshow_delay.start()\n\n\nfunc _on_show_delay_timeout() -> void:\n\tvar text := \"Você sobreviveu %.1f s\\nRecorde: %.1f s\"\n\tresult_label.text = text % [GameManager.time_survived, GameManager.best_time]\n\tshow()\n\trestart_button.grab_focus()\n\n\nfunc _on_restart_button_pressed() -> void:\n\tGameManager.go_to_game()\n\n\nfunc _on_menu_button_pressed() -> void:\n\tGameManager.go_to_menu()", "50": "extends Control\n\n\n@onready var best_label: Label = %BestLabel\n@onready var play_button: Button = %PlayButton\n\n\nfunc _ready() -> void:\n\tbest_label.text = \"Recorde: %.1f s\" % GameManager.best_time\n\tplay_button.grab_focus()\n\n\nfunc _on_play_button_pressed() -> void:\n\tGameManager.go_to_game()\n\n\nfunc _on_quit_button_pressed() -> void:\n\tget_tree().quit()", "52": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n## A dificuldade sobe com o tempo seguindo a curva do Inspector.\n\n\n@export var asteroid_scene: PackedScene\n## Chance (0 a 1) de um asteroide vir mirando direto no player.\n@export_range(0.0, 1.0) var aim_at_player_chance: float = 0.3\n\n@export_group(\"Dificuldade\")\n## Tempo (em segundos) até chegar na dificuldade máxima.\n@export var time_to_max_difficulty: float = 90.0\n## X = progresso do tempo (0 a 1), Y = dificuldade (0 a 1).\n@export var difficulty_curve: Curve\n@export var start_interval: float = 1.0\n@export var end_interval: float = 0.2\n@export var start_speed_multiplier: float = 1.0\n@export var end_speed_multiplier: float = 2.5\n\nvar speed_multiplier: float = 1.0\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n@onready var spawn_timer: Timer = $SpawnTimer\n\n\nfunc _ready() -> void:\n\tGameManager.game_over.connect(spawn_timer.stop)\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\t_update_difficulty()\n\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target), speed_multiplier)\n\n\nfunc _update_difficulty() -> void:\n\tvar progress := clampf(GameManager.time_survived / time_to_max_difficulty, 0.0, 1.0)\n\tvar difficulty := difficulty_curve.sample(progress) if difficulty_curve else progress\n\tspawn_timer.wait_time = lerpf(start_interval, end_interval, difficulty)\n\tspeed_multiplier = lerpf(start_speed_multiplier, end_speed_multiplier, difficulty)\n\n\n## Escolhe para onde o asteroide vai: às vezes no player, senão um ponto qualquer da tela.\nfunc _pick_target() -> Vector2:\n\tvar player := get_tree().get_first_node_in_group(\"player\") as Node2D\n\tif player and randf() < aim_at_player_chance:\n\t\treturn player.global_position\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "53": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n## A dificuldade sobe com o tempo seguindo a curva do Inspector.\n\n\n@export var asteroid_scene: PackedScene\n## Chance (0 a 1) de um asteroide vir mirando direto no player.\n@export_range(0.0, 1.0) var aim_at_player_chance: float = 0.3\n\n@export_group(\"Dificuldade\")\n## Tempo (em segundos) até chegar na dificuldade máxima.\n@export var time_to_max_difficulty: float = 90.0\n## X = progresso do tempo (0 a 1), Y = dificuldade (0 a 1).\n@export var difficulty_curve: Curve\n@export var start_interval: float = 1.0\n@export var end_interval: float = 0.2\n@export var start_speed_multiplier: float = 1.0\n@export var end_speed_multiplier: float = 2.5\n\nvar speed_multiplier: float = 1.0\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n@onready var spawn_timer: Timer = $SpawnTimer\n\n\nfunc _ready() -> void:\n\tGameManager.game_over.connect(spawn_timer.stop)\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\t_update_difficulty()\n\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target), speed_multiplier)\n\n\nfunc _update_difficulty() -> void:\n\tvar progress := clampf(GameManager.time_survived / time_to_max_difficulty, 0.0, 1.0)\n\tvar difficulty := difficulty_curve.sample(progress) if difficulty_curve else progress\n\tspawn_timer.wait_time = lerpf(start_interval, end_interval, difficulty)\n\tspeed_multiplier = lerpf(start_speed_multiplier, end_speed_multiplier, difficulty)\n\n\n## Escolhe para onde o asteroide vai: às vezes no player, senão um ponto qualquer da tela.\nfunc _pick_target() -> Vector2:\n\tvar player := get_tree().get_first_node_in_group(\"player\") as Node2D\n\tif player and randf() < aim_at_player_chance:\n\t\treturn player.global_position\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "54": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n## A dificuldade sobe com o tempo seguindo a curva do Inspector.\n\n\n@export var asteroid_scene: PackedScene\n## Chance (0 a 1) de um asteroide vir mirando direto no player.\n@export_range(0.0, 1.0) var aim_at_player_chance: float = 0.3\n\n@export_group(\"Dificuldade\")\n## Tempo (em segundos) até chegar na dificuldade máxima.\n@export var time_to_max_difficulty: float = 90.0\n## X = progresso do tempo (0 a 1), Y = dificuldade (0 a 1).\n@export var difficulty_curve: Curve\n@export var start_interval: float = 1.0\n@export var end_interval: float = 0.2\n@export var start_speed_multiplier: float = 1.0\n@export var end_speed_multiplier: float = 2.5\n\nvar speed_multiplier: float = 1.0\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n@onready var spawn_timer: Timer = $SpawnTimer\n\n\nfunc _ready() -> void:\n\tGameManager.game_over.connect(spawn_timer.stop)\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\t_update_difficulty()\n\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target), speed_multiplier)\n\n\nfunc _update_difficulty() -> void:\n\tvar progress := clampf(GameManager.time_survived / time_to_max_difficulty, 0.0, 1.0)\n\tvar difficulty := difficulty_curve.sample(progress) if difficulty_curve else progress\n\tspawn_timer.wait_time = lerpf(start_interval, end_interval, difficulty)\n\tspeed_multiplier = lerpf(start_speed_multiplier, end_speed_multiplier, difficulty)\n\n\n## Escolhe para onde o asteroide vai: às vezes no player, senão um ponto qualquer da tela.\nfunc _pick_target() -> Vector2:\n\tvar player := get_tree().get_first_node_in_group(\"player\") as Node2D\n\tif player and randf() < aim_at_player_chance:\n\t\treturn player.global_position\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "64": "class_name Player\nextends CharacterBody2D\n\n\n## Velocidade máxima da nave (pixels por segundo).\n@export var speed: float = 180.0\n## Quão rápido a nave acelera e freia.\n@export var acceleration: float = 900.0\n## Quão rápido a nave gira para a direção do movimento.\n@export var rotation_speed: float = 10.0\n\n\nfunc _physics_process(delta: float) -> void:\n\tvar direction := Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")\n\tvelocity = velocity.move_toward(direction * speed, acceleration * delta)\n\tmove_and_slide()\n\n\tif direction != Vector2.ZERO:\n\t\trotation = lerp_angle(rotation, direction.angle(), rotation_speed * delta)", "65": "class_name Asteroid\nextends RigidBody2D\n\n\n@export var min_speed: float = 60.0\n@export var max_speed: float = 120.0\n## Velocidade máxima de giro (radianos por segundo).\n@export var max_spin: float = 3.0\n\n\n## Lança o asteroide em uma direção. Quem chama é o AsteroidSpawner.\nfunc launch(direction: Vector2, speed_multiplier: float = 1.0) -> void:\n\tlinear_velocity = direction * randf_range(min_speed, max_speed) * speed_multiplier\n\tangular_velocity = randf_range(-max_spin, max_spin)", "66": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n\n\n@export var asteroid_scene: PackedScene\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target))\n\n\n## Escolhe um ponto qualquer da tela para o asteroide atravessar.\nfunc _pick_target() -> Vector2:\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "67": "extends Node\n## GameManager (Autoload): guarda o estado da partida e o recorde.\n## Qualquer script do jogo pode acessar com GameManager.alguma_coisa\n\n\n## Avisa que uma partida nova começou.\nsignal game_started\n## Avisa que o jogador morreu e a partida acabou.\nsignal game_over\n\nconst GAME_SCENE := \"res://levels/game/game.tscn\"\nconst MENU_SCENE := \"res://ui/main_menu/main_menu.tscn\"\nconst SAVE_PATH := \"user://save.cfg\"\n\nvar time_survived: float = 0.0\nvar best_time: float = 0.0\nvar is_playing: bool = false\n\n\nfunc _ready() -> void:\n\tload_best_time()\n\n\nfunc _process(delta: float) -> void:\n\tif is_playing:\n\t\ttime_survived += delta\n\n\nfunc start_game() -> void:\n\ttime_survived = 0.0\n\tis_playing = true\n\tgame_started.emit()\n\n\nfunc end_game() -> void:\n\tif not is_playing:\n\t\treturn\n\tis_playing = false\n\tif time_survived > best_time:\n\t\tbest_time = time_survived\n\t\tsave_best_time()\n\tgame_over.emit()\n\n\nfunc go_to_game() -> void:\n\tget_tree().change_scene_to_file(GAME_SCENE)\n\n\nfunc go_to_menu() -> void:\n\tis_playing = false\n\tget_tree().change_scene_to_file(MENU_SCENE)\n\n\nfunc save_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tconfig.set_value(\"score\", \"best_time\", best_time)\n\tconfig.save(SAVE_PATH)\n\n\nfunc load_best_time() -> void:\n\tvar config := ConfigFile.new()\n\tif config.load(SAVE_PATH) == OK:\n\t\tbest_time = config.get_value(\"score\", \"best_time\", 0.0)", "68": "class_name HealthComponent\nextends Node\n## Componente de vida: guarda a vida de quem for \"dono\" dele e avisa quando morrer.\n## Pode ser usado no player, em inimigos, em chefões...\n\n\n## Emitido sempre que a vida muda (útil para barras de vida e corações).\nsignal health_changed(current: int, maximum: int)\n## Emitido quando a vida chega a zero.\nsignal died\n\n@export var max_health: int = 1\n\nvar current_health: int\n\n\nfunc _ready() -> void:\n\tcurrent_health = max_health\n\n\nfunc take_damage(amount: int) -> void:\n\tif current_health <= 0:\n\t\treturn\n\tcurrent_health = maxi(current_health - amount, 0)\n\thealth_changed.emit(current_health, max_health)\n\tif current_health == 0:\n\t\tdied.emit()\n\n\nfunc heal(amount: int) -> void:\n\tcurrent_health = mini(current_health + amount, max_health)\n\thealth_changed.emit(current_health, max_health)", "69": "class_name HurtboxComponent\nextends Area2D\n## Componente \"área de dano\": quando um corpo perigoso encosta nele,\n## tira vida do HealthComponent ligado no Inspector.\n\n\n@export var health_component: HealthComponent\n@export var damage_per_hit: int = 1\n\n\nfunc _ready() -> void:\n\tbody_entered.connect(_on_body_entered)\n\n\nfunc _on_body_entered(_body: Node2D) -> void:\n\thealth_component.take_damage(damage_per_hit)", "70": "class_name Player\nextends CharacterBody2D\n\n\n## Velocidade máxima da nave (pixels por segundo).\n@export var speed: float = 180.0\n## Quão rápido a nave acelera e freia.\n@export var acceleration: float = 900.0\n## Quão rápido a nave gira para a direção do movimento.\n@export var rotation_speed: float = 10.0\n\n@onready var sprite: Sprite2D = $Sprite2D\n@onready var death_particles: CPUParticles2D = $DeathParticles\n\n\nfunc _physics_process(delta: float) -> void:\n\tvar direction := Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")\n\tvelocity = velocity.move_toward(direction * speed, acceleration * delta)\n\tmove_and_slide()\n\n\tif direction != Vector2.ZERO:\n\t\trotation = lerp_angle(rotation, direction.angle(), rotation_speed * delta)\n\n\nfunc _on_health_component_died() -> void:\n\tset_physics_process(false)\n\tsprite.hide()\n\tdeath_particles.emitting = true\n\tGameManager.end_game()", "71": "class_name Asteroid\nextends RigidBody2D\n\n\n@export var min_speed: float = 60.0\n@export var max_speed: float = 120.0\n## Velocidade máxima de giro (radianos por segundo).\n@export var max_spin: float = 3.0\n\n\n## Lança o asteroide em uma direção. Quem chama é o AsteroidSpawner.\nfunc launch(direction: Vector2, speed_multiplier: float = 1.0) -> void:\n\tlinear_velocity = direction * randf_range(min_speed, max_speed) * speed_multiplier\n\tangular_velocity = randf_range(-max_spin, max_spin)", "72": "class_name AsteroidSpawner\nextends Node2D\n## Cria asteroides em volta da tela, cruzando a tela em direções aleatórias.\n## A dificuldade sobe com o tempo seguindo a curva do Inspector.\n\n\n@export var asteroid_scene: PackedScene\n## Chance (0 a 1) de um asteroide vir mirando direto no player.\n@export_range(0.0, 1.0) var aim_at_player_chance: float = 0.3\n\n@export_group(\"Dificuldade\")\n## Tempo (em segundos) até chegar na dificuldade máxima.\n@export var time_to_max_difficulty: float = 90.0\n## X = progresso do tempo (0 a 1), Y = dificuldade (0 a 1).\n@export var difficulty_curve: Curve\n@export var start_interval: float = 1.0\n@export var end_interval: float = 0.2\n@export var start_speed_multiplier: float = 1.0\n@export var end_speed_multiplier: float = 2.5\n\nvar speed_multiplier: float = 1.0\n\n@onready var spawn_point: PathFollow2D = $SpawnPath/SpawnPoint\n@onready var spawn_timer: Timer = $SpawnTimer\n\n\nfunc _ready() -> void:\n\tGameManager.game_over.connect(spawn_timer.stop)\n\n\nfunc _on_spawn_timer_timeout() -> void:\n\t_update_difficulty()\n\n\tspawn_point.progress_ratio = randf()\n\tvar asteroid: Asteroid = asteroid_scene.instantiate()\n\tadd_child(asteroid)\n\tasteroid.global_position = spawn_point.global_position\n\n\tvar target := _pick_target()\n\tasteroid.launch(asteroid.global_position.direction_to(target), speed_multiplier)\n\n\nfunc _update_difficulty() -> void:\n\tvar progress := clampf(GameManager.time_survived / time_to_max_difficulty, 0.0, 1.0)\n\tvar difficulty := difficulty_curve.sample(progress) if difficulty_curve else progress\n\tspawn_timer.wait_time = lerpf(start_interval, end_interval, difficulty)\n\tspeed_multiplier = lerpf(start_speed_multiplier, end_speed_multiplier, difficulty)\n\n\n## Escolhe para onde o asteroide vai: às vezes no player, senão um ponto qualquer da tela.\nfunc _pick_target() -> Vector2:\n\tvar player := get_tree().get_first_node_in_group(\"player\") as Node2D\n\tif player and randf() < aim_at_player_chance:\n\t\treturn player.global_position\n\tvar screen := get_viewport_rect().size\n\treturn Vector2(randf_range(0, screen.x), randf_range(0, screen.y))", "73": "extends Node2D\n\n\nfunc _ready() -> void:\n\tGameManager.start_game()", "74": "extends CanvasLayer\n\n\n@onready var time_label: Label = %TimeLabel\n@onready var best_label: Label = %BestLabel\n\n\nfunc _ready() -> void:\n\tbest_label.text = \"Recorde: %.1f s\" % GameManager.best_time\n\n\nfunc _process(_delta: float) -> void:\n\ttime_label.text = \"Tempo: %.1f s\" % GameManager.time_survived", "75": "extends CanvasLayer\n\n\n@onready var result_label: Label = %ResultLabel\n@onready var restart_button: Button = %RestartButton\n@onready var show_delay: Timer = $ShowDelay\n\n\nfunc _ready() -> void:\n\thide()\n\tGameManager.game_over.connect(_on_game_over)\n\n\nfunc _on_game_over() -> void:\n\t# Espera um pouquinho para dar tempo de ver a explosão.\n\tshow_delay.start()\n\n\nfunc _on_show_delay_timeout() -> void:\n\tvar text := \"Você sobreviveu %.1f s\\nRecorde: %.1f s\"\n\tresult_label.text = text % [GameManager.time_survived, GameManager.best_time]\n\tshow()\n\trestart_button.grab_focus()\n\n\nfunc _on_restart_button_pressed() -> void:\n\tGameManager.go_to_game()\n\n\nfunc _on_menu_button_pressed() -> void:\n\tGameManager.go_to_menu()", "76": "extends Control\n\n\n@onready var best_label: Label = %BestLabel\n@onready var play_button: Button = %PlayButton\n\n\nfunc _ready() -> void:\n\tbest_label.text = \"Recorde: %.1f s\" % GameManager.best_time\n\tplay_button.grab_focus()\n\n\nfunc _on_play_button_pressed() -> void:\n\tGameManager.go_to_game()\n\n\nfunc _on_quit_button_pressed() -> void:\n\tget_tree().quit()"};
+const slides = [...document.querySelectorAll('.slide')];
+const stage = document.getElementById('stage');
+const menu = document.getElementById('menu');
+let cur = 0;
+
+function fit() {
+  const s = Math.min(innerWidth / 1600, innerHeight / 900);
+  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((el, n) => el.classList.toggle('active', n === cur));
+  document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  menu.querySelectorAll('a').forEach((a, n) => a.classList.toggle('cur', n === cur));
+  if (location.hash !== '#' + (cur + 1)) history.replaceState(null, '', '#' + (cur + 1));
+}
+slides.forEach((el, n) => {
+  const a = document.createElement('a');
+  a.href = '#' + (n + 1);
+  const chip = el.querySelector('.chip');
+  a.innerHTML = (chip ? '<small>' + chip.textContent.replace('Etapa ', '') + '</small>' : '<small>·</small>') + el.dataset.title;
+  a.onclick = e => { e.preventDefault(); show(n); menu.classList.remove('open'); };
+  menu.appendChild(a);
+});
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input,textarea')) return;
+  if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1);
+  else if (e.key === 'm' || e.key === 'M') menu.classList.toggle('open');
+  else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  else if (e.key === 'Escape') { menu.classList.remove('open'); document.getElementById('zoom').classList.remove('open'); }
+});
+document.getElementById('prev').onclick = () => show(cur - 1);
+document.getElementById('next').onclick = () => show(cur + 1);
+document.getElementById('menuBtn').onclick = () => menu.classList.toggle('open');
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.copy');
+  if (btn) {
+    const text = COPY[btn.dataset.copy];
+    const done = () => { btn.textContent = 'Copiado!'; btn.classList.add('ok'); setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('ok'); }, 1500); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, () => fallback(text, done));
+    else fallback(text, done);
+    return;
+  }
+  const im = e.target.closest('.media img');
+  if (im) { const z = document.getElementById('zoom'); z.querySelector('img').src = im.src; z.classList.add('open'); return; }
+  if (e.target.closest('#zoom')) { document.getElementById('zoom').classList.remove('open'); return; }
+});
+function fallback(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (err) {}
+  ta.remove();
+}
+// Ajusta a fonte de cada bloco de código para caber inteiro no slide.
+function fitCode() {
+  slides.forEach(s => {
+    const pres = [...s.querySelectorAll('pre')];
+    if (!pres.length) return;
+    const was = s.style.display;
+    s.style.display = 'flex';
+    let size = 22;
+    const over = () => pres.some(p => p.scrollHeight > p.clientHeight + 1 || p.scrollWidth > p.clientWidth + 1);
+    pres.forEach(p => p.style.fontSize = size + 'px');
+    while (over() && size > 9) { size -= 0.5; pres.forEach(p => p.style.fontSize = size + 'px'); }
+    s.style.display = was;
+  });
+}
+fitCode();
+if (document.fonts) document.fonts.ready.then(fitCode);
+addEventListener('resize', fit);
+addEventListener('hashchange', () => { const n = parseInt(location.hash.slice(1)); if (n) show(n - 1); });
+if (location.search.includes('pdf')) ['bar', 'counter', 'nav'].forEach(id => document.getElementById(id).style.display = 'none');
+fit();
+show((parseInt(location.hash.slice(1)) || 1) - 1);
+</script>
+</body>
+</html>

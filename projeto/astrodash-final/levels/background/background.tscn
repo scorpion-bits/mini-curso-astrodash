@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://icon.svg" id="1_icon"]
+
+[node name="Background" type="Parallax2D"]
+repeat_size = Vector2(640, 360)
+autoscroll = Vector2(-20, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.12)
+texture_repeat = 2
+texture = ExtResource("1_icon")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 640, 360)
