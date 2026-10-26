@@ -18,7 +18,9 @@ A arte provisória é o ícone do Godot. Na segunda parte do curso desenhamos as
 
 ## Como usar os slides
 
-Abra `slides/index.html` no navegador (não precisa de internet).
+Online: **https://scorpion-bits.github.io/mini-curso-astrodash/** (GitHub Pages)
+
+Ou abra `slides/index.html` no navegador (funciona sem internet).
 
 - `→` / `espaço` / clique: próximo slide · `←`: anterior
 - `M`: índice com todos os slides · `F`: tela cheia
